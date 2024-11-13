@@ -1,4 +1,4 @@
-﻿namespace WDD_A05
+﻿namespace WP_A05
 {
     internal class Program
     {
