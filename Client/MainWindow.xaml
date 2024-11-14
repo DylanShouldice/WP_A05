@@ -6,7 +6,179 @@
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <Grid x:Name="grid" Margin="10,0,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10*"/>
+            <ColumnDefinition Width="30*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="20*"/>
+        </Grid.RowDefinitions>
+        <Viewbox Grid.ColumnSpan="2">
+            <Border BorderBrush="Black" 
+                    BorderThickness="5,5,5,5" 
+                    Margin="10,10,10,18" 
+                    Grid.ColumnSpan="2" 
+                    Background="#FF9EB5FF" 
+                    CornerRadius="10,10,10,10" 
+                    VerticalAlignment="Top">
+                <TextBlock Grid.Column="1" 
+                           HorizontalAlignment="Center" 
+                           TextWrapping="Wrap" 
+                           Text="A05 - TC/IP Word Guessing Game" 
+                           Width="584" 
+                           Height="48" 
+                           FontSize="36" 
+                           TextAlignment="Center" 
+                           VerticalAlignment="Center"/>
+            </Border>
+        </Viewbox>
+        <Border x:Name="InputBorder" 
+                BorderBrush="Black" 
+                BorderThickness="1" 
+                Background="#FFACBDC9" 
+                CornerRadius="10,10,10,10" 
+                Grid.Row="1" 
+                Grid.RowSpan="11">
+            <Viewbox VerticalAlignment="Top">
+                <Label x:Name="InputLabel" 
+                       Content="Game/Connection Input" 
+                       Background="{x:Null}" 
+                       FontWeight="Bold" 
+                       HorizontalContentAlignment="Center"/>
+            </Viewbox>
+        </Border>
+
+        <Viewbox Grid.Row="2" HorizontalAlignment="Left">
+            <Label x:Name="NameLabel" 
+                   Content="Name:" 
+                   Background="{x:Null}" 
+                   VerticalAlignment="Bottom" 
+                   FontWeight="Bold" 
+                   Grid.Row="2" 
+                   HorizontalAlignment="Left"/>
+        </Viewbox>
+        <Viewbox Grid.Row="3">
+            <TextBox x:Name="NameInput" 
+                 TextWrapping="Wrap" 
+                 Background="#FFE9E9E9" 
+                 Grid.Row="3" 
+                 HorizontalContentAlignment="Stretch" 
+                 VerticalContentAlignment="Stretch" 
+                 Width="110"/>
+        </Viewbox>
+        <Viewbox Grid.Row="4" HorizontalAlignment="Left">
+            <Label Content="Time Limit (m):" 
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Bottom" 
+                   Background="{x:Null}" 
+                   FontWeight="Bold" 
+                   Grid.Row="4"/>
+        </Viewbox>
+        <Viewbox Grid.Row="5">
+            <TextBox x:Name="TimeLimitInput" 
+                     TextWrapping="Wrap" 
+                     Grid.Row="5"
+                     VerticalAlignment="Top" 
+                     Background="#FFE9E9E9" 
+                     Width="110"/>
+        </Viewbox>
+        <Viewbox Grid.Row="6" HorizontalAlignment="Left">
+            <Label x:Name="IPLabel" 
+                   Content="IP Address:" 
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Bottom" 
+                   Background="{x:Null}" 
+                   FontWeight="Bold" 
+                   Grid.Row="6"/>
+        </Viewbox>
+        <Viewbox Grid.Row="7">
+            <TextBox x:Name="IPInput" 
+                     TextWrapping="Wrap" 
+                     VerticalAlignment="Top" 
+                     Background="#FFE9E9E9" 
+                     Grid.Row="7" 
+                     Width="110"/>
+        </Viewbox>
+        <Viewbox Grid.Row="8" HorizontalAlignment="Left">
+            <Label x:Name="PortLabel" 
+                   Content="Port:" 
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Bottom" 
+                   Background="{x:Null}" 
+                   FontWeight="Bold"  
+                   Grid.Row="8"/>
+        </Viewbox>
+        <Viewbox Grid.Row="9">
+            <TextBox x:Name="PortInput" 
+                     TextWrapping="Wrap" 
+                     VerticalAlignment="Top" 
+                     Background="#FFE9E9E9" 
+                     Grid.Row="9"
+                     Width="110"/>
+        </Viewbox>
+        <Viewbox Grid.Row="10" Grid.RowSpan="2" Width="150">
+            <Button Content="Start Game" 
+                    VerticalAlignment="Top" 
+                    FontWeight="Bold" 
+                    Grid.Row="10" Margin="0,2,0,2" Width="100"/>
+        </Viewbox>
+
+        <Border x:Name="border" 
+                BorderBrush="Black" 
+                BorderThickness="1" 
+                Grid.Column="1" 
+                Grid.Row="1" 
+                Background="#FFACBDC9" 
+                Grid.RowSpan="11" 
+                Margin="10,0,11,0" 
+                CornerRadius="10,10,10,10">
+            <Viewbox VerticalAlignment="Top">
+                <Label x:Name="label" 
+                       Content="Game Input" 
+                       Background="{x:Null}" 
+                       FontWeight="Bold" 
+                       HorizontalContentAlignment="Center" Height="30" Width="350" Margin="0,0,0,150"/>
+            </Viewbox>
+        </Border>
+
+        <Viewbox Grid.Row="3" Grid.Column="1">
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="String:" FontWeight="Bold" Height="20" Margin="0,5,0,0" />
+        </Viewbox>
+        <Viewbox Grid.Row="4" Grid.Column="1" VerticalAlignment="Top">
+            <TextBlock Text="qwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiop" HorizontalAlignment="Left" Margin="15,0,15,0" TextWrapping="WrapWithOverflow" />
+        </Viewbox>
+        <Viewbox Grid.Row="5" Grid.Column="1">
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Number of Words Left:" Margin="10,0,0,0" FontWeight="Bold" Height="20" />
+        </Viewbox>
+        <Viewbox Grid.Row="6" Grid.Column="1" VerticalAlignment="Top">
+            <TextBlock Text="100" HorizontalAlignment="Left" Margin="15,0,15,0" TextWrapping="WrapWithOverflow" />
+        </Viewbox>
+        <Viewbox Grid.Row="8" Grid.Column="1">
+            <TextBox x:Name="GuessInput" 
+                 TextWrapping="Wrap" 
+                 Grid.Row="5"
+                 VerticalAlignment="Top" 
+                 Background="#FFE9E9E9" 
+                 Width="300"/>
+        </Viewbox>
+        <Viewbox Grid.Row="10" Grid.Column="1" Grid.RowSpan="2">
+            <Button Content="Guess Word" 
+            VerticalAlignment="Top" 
+            FontWeight="Bold" 
+            Grid.Row="10" Width="100" Margin="0,10,0,10"/>
+        </Viewbox>
         
     </Grid>
 </Window>
