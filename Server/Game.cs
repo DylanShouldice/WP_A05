@@ -32,7 +32,7 @@ namespace Server
             int type;
         } 
 
-        public async Task Play(CancellationToken cToken)
+        public async Task Play(CancellationToken cToken) // I think this can be better, I want this function to have only 1 await. 
         {
             try
             {
@@ -89,7 +89,7 @@ namespace Server
                     }
                     else
                     {
-                        Console.WriteLine("Invalid message, client tried to send game message without connection");
+                        Console.WriteLine("Invalid message, client tried to send game message without connection"); // If somehow the client sends a message with a code relating to a game, but their game is not yet active
                     }
                 }
             }
@@ -103,7 +103,7 @@ namespace Server
             }
         }
 
-        private void InitalizeGame()
+        private void InitalizeGame() // Sets variables of game object neccesary for the game
         {
             string[] filePool = Directory.GetFiles(gameDataDirectory, "*.txt");
             Random rand = new Random();
