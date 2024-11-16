@@ -1,12 +1,13 @@
-﻿namespace Server
+﻿using System.Threading.Tasks;
+
+namespace Server
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            ServerControl host = new ServerControl();
-            host.FindHostIP(); 
-            host.Start();
+            ServerControl host = new ServerControl("10.0.0.34", 13000);
+            await host.StartServer();
         }
     }
 }

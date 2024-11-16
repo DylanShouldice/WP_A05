@@ -12,106 +12,96 @@ namespace Server
 {
     internal class ServerControl
     {
-        TcpListener server = null;  // I think I might make a class called Connection that will get instanited each time a user 
-                                    // connects to the server, and that is what will be used to serve each user perhaps.
-        IPAddress hostIp = null;
-        string hostMachine = string.Empty;
-        int port = 13000;
-        volatile bool keepRunning = true;
-        List<Connection> activeUsers = new List<Connection>();
-        ConcurrentQueue<TcpClient> connectionQueue = new ConcurrentQueue<TcpClient>();
+        private readonly TcpListener listener;
+        private readonly ConcurrentDictionary<TcpClient, Game> currentGames = new ConcurrentDictionary<TcpClient, Game>();
+        private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly string gameDir;
+        private int clientsConnected;
+        private int activeUsers;
 
 
-
-
-
-        // Currently will try to obtain your wireless LAN ipv4 and set it as host machine, but it shows all valid ipv4 on current machine
-        // Like in the case of us having VMWare connections, which I think can be used as hosts if we set it up properly in VMWare
-        internal void FindHostIP()
+        public ServerControl(string ip, int port, string gameDir)
         {
-            try
-            {
-                hostMachine = Dns.GetHostName();
-                Console.WriteLine(hostMachine);
-            }
-            catch (SocketException ex)
-            {
-                Console.WriteLine("Caught Socket Exception {Server, 26}", ex);
-            }
-            var addressList = Dns.GetHostAddresses(hostMachine);
-            List<IPAddress> validHostIps = new List<IPAddress>();
-            int numValidIp = 1;
-
-            foreach (var address in addressList)
-            {
-                if (address.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    validHostIps.Add(address);
-                    Console.WriteLine($"#{numValidIp} -- IP Address is : {address.ToString()}");
-                    numValidIp++;
-                }
-            }
-            hostIp = validHostIps[numValidIp - 2];
-            Console.WriteLine($"Chosen IP Address = {hostIp}");
+            this.gameDir = gameDir;
+            listener = new TcpListener(IPAddress.Parse(ip), port);
         }
 
-        internal void Start()
+        public ServerControl(string ip, int port)
         {
-            server = new TcpListener(hostIp, port);
-            server.Start();
-            Console.WriteLine("Server started running at {0}", DateTime.Now);
-
-            Thread connectionThread = new Thread(ConnectionHandler); // Handles adding clients to queue. I think I will need a main queue that holds all incoming messages so I can get their purpose then create threads for the user as needed
-            Task master = new Task(ServerLoop);
-            connectionThread.Start();
-            master.Start();
-
-
+            listener = new TcpListener(IPAddress.Parse(ip), port);
         }
 
-        private void ConnectionHandler() // Adds incoming clients into the queue
+        /*
+         * 
+         */
+        public async Task StartServer() // Start server, accept clients
         {
-            while (keepRunning)
+            listener.Start();
+            Console.WriteLine($"--- Server Started at {DateTime.Now} ---");
+            Console.WriteLine("Waiting for clients");
+
+            while (!cts.IsCancellationRequested)
             {
                 try
                 {
-                    TcpClient client = server.AcceptTcpClient();
-                    Console.WriteLine("Client Added To Queue");
-
-                    connectionQueue.Enqueue(client);
+                    var client = await listener.AcceptTcpClientAsync();
+                    _ = HandleClient(client, cts.Token);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    Console.WriteLine("Error accepting client: " + ex.Message);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Exception caught in 'StartServer()' : {e.Message}");
                 }
             }
         }
 
-        public async void ServerLoop() // Checks the queue for incoming clients and accepts them.
+        public void StopServer()
         {
-            while (keepRunning)
+            Console.WriteLine($"Server stop started at {DateTime.Now}");
+            cts.Cancel();
+            listener.Stop(); 
+
+            foreach (var game in currentGames)
             {
-                while(connectionQueue.TryDequeue(out TcpClient client))
+                try
                 {
-                    Connection newConnection = new Connection(client);
-                    
-                    lock (activeUsers)
-                    {
-                        Console.WriteLine("Client Connected");
-                        activeUsers.Add(newConnection);
-                    }
-                    // Might need to add something here I have a feeling. idk what though
+                    game.Value.SendMessage(0x05, "Server is shutting down!");
+                    game.Key.Close();
                 }
-                await Task.Delay(100);
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Exception caught in 'StopServer()' : {e.Message}");
+                }
             }
+
+            currentGames.Clear();
+            Console.WriteLine($"Server stopped at {DateTime.Now}");
         }
 
+        private async Task HandleClient(TcpClient user, CancellationToken cToken)
+        {
+            clientsConnected++;
+            Console.WriteLine($"Connection Made #{clientsConnected}");
 
-
+            try
+            {
+                Game game = new Game(user, gameDir);
+                currentGames.TryAdd(user, game);
+                await game.Play(cToken);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception Caught in 'HandleClient()' : {e.Message}");
+            }
+            finally
+            {
+                currentGames.TryRemove(user, out _);
+                user.Close();
+                Console.WriteLine($"Client : {user.Client.RemoteEndPoint} has disconnected");
+            }
+        }
     }
 }
-
-
-
-
-
