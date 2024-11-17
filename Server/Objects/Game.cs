@@ -56,14 +56,16 @@ namespace Server
                         while (remainingWords > 0 && !cToken.IsCancellationRequested)
                         {
                             message = await ReadMessage();
-                            messageType = message[0];
+                            messageType = int.Parse(message.Substring(0, 1));
                             content = message.Substring(1);
-                            
-                            if (messageType == 2)
+                            Console.WriteLine($"Message Type : {messageType}");
+                            Console.WriteLine($"Message content : {message}");
+
+                            if (messageType == 0x02)
                             {
-                                CheckGuess(content); // This should send a message that signifies the guess
+                                //CheckGuess(content); // This should send a message that signifies the guess
                             }
-                            else if (messageType == 3)
+                            else if (messageType == 0x03)
                             {
                                 SendMessage(3, "Leaving game");
                                 // await message here and get a yes / no
@@ -112,8 +114,8 @@ namespace Server
 
             currentWordPool = gameFileArr[0];
             remainingWords = int.Parse(gameFileArr[1]);
-            wordsToGuess = new List<string>(gameFileArr);
-            wordsToGuess.RemoveRange(0, 2); 
+            wordsToGuess = new List<string>(gameFileArr); // List to hold words, gets removed as guessed
+            wordsToGuess.RemoveRange(0, 2);               
         }
 
         private void CheckGuess(string guess)

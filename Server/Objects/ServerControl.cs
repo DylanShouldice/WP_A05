@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Server
 {
@@ -14,7 +15,9 @@ namespace Server
     {
         private readonly TcpListener listener;
         private readonly ConcurrentDictionary<TcpClient, Game> currentGames = new ConcurrentDictionary<TcpClient, Game>();
+        private readonly ConcurrentQueue<TcpClient> connectionQueue = new ConcurrentQueue<TcpClient>();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly Logger logger;
         private readonly string gameDir;
         private int clientsConnected;
         private int activeUsers;
@@ -24,6 +27,7 @@ namespace Server
         {
             this.gameDir = gameDir;
             listener = new TcpListener(IPAddress.Parse(ip), port);
+            logger = new Logger(logDir);
         }
 
         public ServerControl(string ip, int port)
@@ -37,15 +41,17 @@ namespace Server
         public async Task StartServer() // Start server, accept clients
         {
             listener.Start();
-            Console.WriteLine($"--- Server Started at {DateTime.Now} ---");
-            Console.WriteLine("Waiting for clients");
+            Thread connectionHandler = new Thread(AcceptConnections);
+            connectionHandler.Start();
+            logger.Log($"--- Server Started at {DateTime.Now} ---");
+            logger.Log("Waiting for clients");
 
             while (!cts.IsCancellationRequested)
             {
                 try
                 {
-                    var client = await listener.AcceptTcpClientAsync();
-                    _ = HandleClient(client, cts.Token);
+                    TcpClient client = await listener.AcceptTcpClientAsync();
+                    connectionQueue.Enqueue(client);
                 }
                 catch (OperationCanceledException)
                 {
@@ -53,16 +59,32 @@ namespace Server
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Exception caught in 'StartServer()' : {e.Message}");
+                    logger.Log($"Exception caught -- ServerControl.StopServer() -- {e.Message}");
+                }
+            }
+        }
+
+        internal void AcceptConnections()
+        {
+            while (!cts.IsCancellationRequested)
+            {
+                TcpClient newClient = new TcpClient();
+                if (connectionQueue.TryDequeue(out newClient))
+                {
+                    Task.Run(() => HandleClient(newClient, cts.Token));
+                }
+                else
+                {
+                    Thread.Sleep(100);
                 }
             }
         }
 
         public void StopServer()
         {
-            Console.WriteLine($"Server stop started at {DateTime.Now}");
+            logger.Log("Server stop initated");
             cts.Cancel();
-            listener.Stop(); 
+            listener.Stop();
 
             foreach (var game in currentGames)
             {
@@ -73,18 +95,18 @@ namespace Server
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Exception caught in 'StopServer()' : {e.Message}");
+                    logger.Log($"Exception caught -- ServerControl.StopServer() -- {e.Message}");
                 }
             }
 
             currentGames.Clear();
-            Console.WriteLine($"Server stopped at {DateTime.Now}");
+            logger.Log($"SERVER CLOSING");
         }
 
         private async Task HandleClient(TcpClient user, CancellationToken cToken)
         {
             clientsConnected++;
-            Console.WriteLine($"Connection Made #{clientsConnected}");
+            logger.Log($"Connection Made #{clientsConnected}");
 
             try
             {
@@ -94,14 +116,18 @@ namespace Server
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Exception Caught in 'HandleClient()' : {e.Message}");
+                logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e.Message}");
             }
             finally
             {
                 currentGames.TryRemove(user, out _);
                 user.Close();
-                Console.WriteLine($"Client : {user.Client.RemoteEndPoint} has disconnected");
+                clientsConnected--;
+                logger.Log($"Client : {user.Client.RemoteEndPoint} has disconnected");
             }
         }
+
+        // TO-DO : Current Task create dynamic start up for server and logger that allows choice of ip, and which dir to get for gameDir,
+        // then either create or find file for logDir. But dont nest log dir inside of server, incase you wamt to use it later
     }
 }
