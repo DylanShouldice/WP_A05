@@ -13,23 +13,6 @@ using System.IO;
 
 namespace Server
 {
-    
-    public enum Communication
-    {
-        CONNECTION,
-        GAME_MSG,
-        NON_GAME,
-        SERVER,     // Will be used when the server sends something to the client, when no client input was triggered to do so
-                    // I think this might allow us to time out users who spam enter. then maybe we can make their screen red.
-
-    }
-
-    public enum ServerStatus
-    {
-
-    }
-
-
     public struct Message
     {
         public string content;
@@ -38,6 +21,9 @@ namespace Server
 
         public Message(string msg)
         {
+            Logger log = new Logger("ree");
+            content = msg;
+            log.Log(content);
             type = int.Parse(msg[0].ToString());
             if (type != 1)
             {
@@ -47,7 +33,6 @@ namespace Server
             {
                 client = 0;
             }
-            content = msg.Substring(1);
         }
     }
 
@@ -62,20 +47,21 @@ namespace Server
         private int clientsConnected;
         private int totalUsers;
 
+        // Consts 
 
-        public struct InitMsg
-        {
-            public int type;
-            public string content;
+        // Communcation
 
-            public InitMsg(string msg)
-            {
-                type = int.Parse(msg[0].ToString());
-                content = msg.Substring(1);
-            }
-                
+        public const int FIRST_CONNECT = 1;
+        public const int GAME_MSG      = 2;
+        public const int NON_GAME_MSG  = 3;
+        public const int SERVER_MSG    = 4;
 
-        }
+        // Client Status
+
+        public const int CONNECTED = 0;
+        public const int AWAITING = 1;
+        public const int TIME_OUT = 2;
+        public const int DISCONNECTED = 3;
 
         public ServerControl(string ip, int port, string gameDir)
         {
@@ -98,7 +84,7 @@ namespace Server
             Thread connectionHandler = new Thread(AcceptConnections);
             connectionHandler.Start();
             logger.Log("SERVER STARTED");
-            logger.Log("Waiting for clients");
+            logger.Log($"Waiting for clients");
 
             while (!cts.IsCancellationRequested)
             {
@@ -165,12 +151,13 @@ namespace Server
             Game game = null;
             try
             {
-                Message msg = new Message(await ReadMessage(user));                
-                if (msg.type != 1)
+                string msg = await ReadMessage(user);
+                logger.Log(msg);
+                string content = msg.Substring(2);
+                if (msg[0] == )
                 {
-                    logger.Log($"Client reconnected with ID: {msg.client}");
+                    logger.Log($"Client reconnected with ID: {msg[1]}");
                     currentGames.TryGetValue(game.clientId, out game);
-                    await Task.Run(() => game.Play(msg));
                 }
                 else
                 {
@@ -178,6 +165,8 @@ namespace Server
                     currentGames.TryAdd(game.clientId, game);
                     SendMessage(user, 1, game.clientId);
                 }
+                await Task.Run(() => game.Play(msg));
+
             }
             catch (Exception e)
             {
@@ -206,8 +195,9 @@ namespace Server
 
         public async Task<string> ReadMessage(TcpClient client)
         {
-            var buffer = new byte[1024];
-            var bytesRead = await client.GetStream().ReadAsync(buffer, 0, buffer.Length);
+            Byte[] buffer = new Byte[1024];
+            NetworkStream stream = client.GetStream();
+            int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
             return Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
         }
 
