@@ -7,6 +7,7 @@ using System.Runtime.Remoting.Messaging;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Server;
 
 namespace Server
 {
@@ -19,8 +20,9 @@ namespace Server
         private int remainingWords = 20;
         private List<string> wordsToGuess;
         public string clientId;
+  
 
-        public Game (TcpClient client, string gameFile, string clientId)
+        public Game(TcpClient client, string gameFile, string clientId)
         {
             this.client = client;
             gameDataDirectory = gameFile;
@@ -40,39 +42,37 @@ namespace Server
                 client = int.Parse(msg[1].ToString());
                 content = msg.Substring(1);
             }
-        } 
+        }
 
-        public async Task Play(CancellationToken cToken) // I think this can be better, I want this function to have only 1 await. 
+        public void Play(Server.Message message) // I think this can be better, I want this function to have only 1 await. 
         {
             try
             {
-                while (!cToken.IsCancellationRequested)
+                Console.WriteLine($"Message Type : {message.type}");
+                Console.WriteLine($"Message content : {message}");
+
+                switch (message.type)
                 {
-                    Message message = new Message(await ReadMessage());
-                    Console.WriteLine($"Message Type : {message.type}");
-                    Console.WriteLine($"Message content : {message}");
+                    case 1:
+                        string name = message.content;
+                        InitalizeGame();
+                        SendMessage(1, $"{currentWordPool}\n{remainingWords}");
+                        Console.WriteLine($"Game started at {DateTime.Now}");
+                        break;
 
-                    switch (message.type)
-                    {
-                        case 1: 
-                            string name = message.content;
-                            InitalizeGame();
-                            SendMessage(1, $"{currentWordPool}\n{remainingWords}");
-                            Console.WriteLine($"Game started at {DateTime.Now}");
-                            break;
+                    case 2:
+                        // CheckGuess(message.content);
+                        SendMessage(0, "Checking Guess");
+                        break;
 
-                        case 2: 
-                            CheckGuess(message.content);
-                            break;
+                    case 3:
+                        SendMessage(3, "Leaving game");
+                        return;
 
-                        case 3: 
-                            SendMessage(3, "Leaving game");
-                            return;
+                    default:
+                        Console.WriteLine("Do not know what to do");
+                        break;
 
-                        default:
-                            Console.WriteLine("Do not know what to do");
-                            break;
-                    }
                 }
             }
             catch (OperationCanceledException)
@@ -95,7 +95,7 @@ namespace Server
             currentWordPool = gameFileArr[0];
             remainingWords = int.Parse(gameFileArr[1]);
             wordsToGuess = new List<string>(gameFileArr); // List to hold words, gets removed as guessed
-            wordsToGuess.RemoveRange(0, 2);               
+            wordsToGuess.RemoveRange(0, 2);
         }
 
         private void CheckGuess(string guess)

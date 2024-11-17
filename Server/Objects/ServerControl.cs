@@ -28,7 +28,29 @@ namespace Server
     {
 
     }
-        
+
+
+    public struct Message
+    {
+        public string content;
+        public int client;
+        public int type;
+
+        public Message(string msg)
+        {
+            type = int.Parse(msg[0].ToString());
+            if (type != 1)
+            {
+                client = int.Parse(msg[1].ToString());
+            }
+            else
+            {
+                client = 0;
+            }
+            content = msg.Substring(1);
+        }
+    }
+
     internal class ServerControl
     {
         private readonly TcpListener listener;
@@ -40,18 +62,19 @@ namespace Server
         private int clientsConnected;
         private int totalUsers;
 
-        public struct Message
-        {
-            public string content;
-            public int client;
-            public int type;
 
-            public Message(string msg)
+        public struct InitMsg
+        {
+            public int type;
+            public string content;
+
+            public InitMsg(string msg)
             {
                 type = int.Parse(msg[0].ToString());
-                client = int.Parse(msg[1].ToString());
                 content = msg.Substring(1);
             }
+                
+
         }
 
         public ServerControl(string ip, int port, string gameDir)
@@ -139,16 +162,15 @@ namespace Server
             totalUsers++;
             clientsConnected++;
             logger.Log($"Connection Made #{clientsConnected}");
-            logger.Log(user.Client.RemoteEndPoint.ToString()); // testing 
             Game game = null;
             try
             {
-                Message msg = new Message(await ReadMessage(user));
-                
-                
-                if (currentGames.TryGetValue(msg.client.ToString(), out game))
+                Message msg = new Message(await ReadMessage(user));                
+                if (msg.type != 1)
                 {
                     logger.Log($"Client reconnected with ID: {msg.client}");
+                    currentGames.TryGetValue(game.clientId, out game);
+                    await Task.Run(() => game.Play(msg));
                 }
                 else
                 {
@@ -156,15 +178,13 @@ namespace Server
                     currentGames.TryAdd(game.clientId, game);
                     SendMessage(user, 1, game.clientId);
                 }
-                
             }
             catch (Exception e)
             {
-                logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e.Message}");
+                logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e}");
             }
             finally
             {
-                currentGames.TryRemove(game.clientId, out _);
                 user.Close();
                 clientsConnected--;
                 logger.Log($"Client : {user.Client.RemoteEndPoint} has disconnected");
