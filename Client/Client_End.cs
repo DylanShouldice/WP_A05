@@ -23,6 +23,21 @@ namespace Client
         IDLE,
         TME_OUT
     }
+    public struct Message
+    { 
+        string content {  get; set; }
+        int type { get; set; }
+    }
+
+    /*
+     * =================================================CLASS================================================|
+     * Title    : Client_End                                                                                |
+     * Purpose  : The purpose of this class is to serve as the connection between the UI and server end     |
+     *            levels of the project. It should recieve messages from the UI level and send it to the    |
+     *            server. It should also receive messages from the server and send them to the correct      |
+     *            places within the UI level.                                                               |
+     *======================================================================================================|
+     */
     internal class Client_End
     {
 
