@@ -45,8 +45,8 @@ namespace Client
         private void start_btn_Click(object sender, RoutedEventArgs e)
         {
             //VALIDATE CONTENTS OF FIELDS HERE//
-            //
-            //
+            //Not empty
+            //Correct data type
 
             //PLACEHOLDER FOR TESTING
             string server = IP_txt.Text;
@@ -54,7 +54,7 @@ namespace Client
             Int32 port;
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
-            Message msg = client.ConnectClient(server, message, port);    //Send message and get info
+            message msg = client.ConnectClient(server, message, port);    //Send message and get info
             
             //DO STUFF WITH MESSAGE HERE
             // if or switch statement?
@@ -63,6 +63,36 @@ namespace Client
             //IF ALL INPUT IS VALID -> SWAP UI
             Game_Cover.Visibility = Visibility.Hidden;
             Input_Cover.Visibility = Visibility.Visible;
+        }
+
+        /*
+         * ===========================================FUNCTION==========================================|
+         * Name     : Guess_btn_Click                                                                   |
+         * Purpose  : To validate input then send it to the server. Upon valid input, number of words   |
+         *            should be updated (or client informed server is shutting down).                   |
+         * Inputs   : object sender     RoutedEventArgs e                                               |
+         * Outputs  : Updates UI to show remaining words or inform that server is shutting down         |
+         * Returns  : NONE                                                                              |
+         * =============================================================================================|
+         */
+        private void Guess_btn_Click(object sender, RoutedEventArgs e)
+        {
+            //VALIDATE CONTENTS OF FIELDS HERE
+            //Alphabetical letters only
+            //Not empty
+
+            //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
+            //PLACEHOLDER FOR TESTING
+            string server = IP_txt.Text;
+            string message = "Word";  //will be the identifier sent to server?
+            Int32 port;
+            int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
+
+            message msg = client.ConnectClient(server, message, port);
+
+            //DO STUFF WITH MESSAGE HERE//
+            //Realistically should only update number of guesses left
+            //Or tell us server shut down :(
         }
     }
 }

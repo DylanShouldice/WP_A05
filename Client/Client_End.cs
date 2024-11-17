@@ -23,6 +23,20 @@ namespace Client
         IDLE,
         TME_OUT
     }
+
+    public struct message
+    {
+        public string content;
+        public int client;
+        public int type;
+
+        public message(string msg)
+        {
+            type = int.Parse(msg[0].ToString());
+            client = int.Parse(msg[1].ToString());
+            content = msg.Substring(1);
+        }
+    }
     internal class Client_End
     {
 
@@ -36,7 +50,7 @@ namespace Client
          * Returns  : Message msg - Message to give to UI level                                         |
          * =============================================================================================|
          */
-        public Message ConnectClient(String server, String message, Int32 port)
+        public message ConnectClient(String server, String message, Int32 port)
         {
             try
             {
@@ -70,7 +84,7 @@ namespace Client
             }
 
             //NOT WORKING HERE TO MAKE COMPILER HAPPY
-            Message msg = new Message();
+            message msg = new message();
             return msg;
         }
     }

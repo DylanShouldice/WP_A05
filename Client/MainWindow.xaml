@@ -185,7 +185,7 @@
             <Button x:Name="Guess_btn" Content="Guess Word" 
             VerticalAlignment="Top" 
             FontWeight="Bold" 
-            Grid.Row="10" Width="100" Margin="0,10,0,10"/>
+            Grid.Row="10" Width="100" Margin="0,10,0,10" Click="Guess_btn_Click"/>
         </Viewbox>
         <Border x:Name="Game_Cover" 
         BorderBrush="Black" 
