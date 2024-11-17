@@ -69,8 +69,7 @@ namespace Client
                 NetworkStream stream = client.GetStream();  //Creating a stream
 
                 //Sending message to stream
-                Byte[] buffer = new Byte[message.Length + 1];
-                buffer[0] = indicator;
+                Byte[] buffer = new Byte[message.Length];
                 Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
                 stream.Write(buffer, 0, buffer.Length);
 
