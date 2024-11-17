@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using System.Diagnostics;
 
 namespace Client
 {
@@ -60,25 +61,24 @@ namespace Client
          * Returns  : Message msg - Message to give to UI level                                         |
          * =============================================================================================|
          */
-        public message ConnectClient(String server, String message, Int32 port, Byte indicator)
+        public async Task <string> ConnectClient(String server, String message, Int32 port, Byte indicator)
         {
+            string serverResponse = string.Empty;
             try
             {
                 TcpClient client = new TcpClient(server, port); //Creates TcpClient
 
                 NetworkStream stream = client.GetStream();  //Creating a stream
 
+                SendMessage(client, "1Start Game");
                 //Sending message to stream
-                Byte[] buffer = new Byte[message.Length];
-                Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
-                stream.Write(buffer, 0, buffer.Length);
+                //Byte[] buffer = new Byte[message.Length + 1];
+                //buffer[0] = indicator;
+                //Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
+                //stream.Write(buffer, 0, buffer.Length);
 
-                Byte[] data = new Byte[256];    //To store server response (game information)
-                String response = String.Empty; //String to store server response
-
-                //Taken from example - may need tweaking
-                Int32 bytes = stream.Read(data, 0, data.Length);
-                response = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                serverResponse = await ReadMessage(client);
+               
                 //DO STUFF WITH DATA HERE
 
                 //Close everything
@@ -87,16 +87,32 @@ namespace Client
             }
             catch (ArgumentNullException ex)
             {
-                Console.WriteLine("ArgumentNullException: {0}", ex);
+                Trace.WriteLine("ArgumentNullException: {0}", ex.ToString());
             }
             catch (SocketException ex)
             {
-                Console.WriteLine("SocketException: {0}", ex);
+                Trace.WriteLine("SocketException: {0}", ex.ToString());
             }
+            catch (Exception e)
+            {
+                Trace.WriteLine($"Exception Caught in : 'ConnectClient()' {e}");
+            }
+            
+            return serverResponse;
+        }
 
-            //NOT WORKING HERE TO MAKE COMPILER HAPPY
-            message msg = new message();
-            return msg;
+        public void SendMessage(TcpClient client, string message)
+        {
+            var buffer = new byte[message.Length + 1];
+            Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
+            client.GetStream().Write(buffer, 0, buffer.Length);
+        }
+
+        public async Task<string> ReadMessage(TcpClient client)
+        {
+            Byte[] buffer = new Byte[1024];
+            int bytesRead = await client.GetStream().ReadAsync(buffer, 0, buffer.Length);
+            return Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
         }
     }
 }

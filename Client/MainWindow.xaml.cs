@@ -42,7 +42,7 @@ namespace Client
          * Returns  : NONE                                                                              |
          * =============================================================================================|
          */
-        private void start_btn_Click(object sender, RoutedEventArgs e)
+        private async void start_btn_Click(object sender, RoutedEventArgs e)
         {
             //VALIDATE CONTENTS OF FIELDS HERE//
             //Not empty
@@ -54,7 +54,7 @@ namespace Client
             Int32 port;
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
-            message msg = client.ConnectClient(server, message, port, 1);    //Send message and get info
+            string respone = await client.ConnectClient(server, message, port, 1);    //Send message and get info
             
             //DO STUFF WITH MESSAGE HERE
             // if or switch statement?
@@ -75,7 +75,7 @@ namespace Client
          * Returns  : NONE                                                                              |
          * =============================================================================================|
          */
-        private void Guess_btn_Click(object sender, RoutedEventArgs e)
+        private async void Guess_btn_Click(object sender, RoutedEventArgs e)
         {
             //VALIDATE CONTENTS OF FIELDS HERE
             //Alphabetical letters only
@@ -88,7 +88,7 @@ namespace Client
             Int32 port;
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
-            message msg = client.ConnectClient(server, message, port, 2);
+            string serverResponse = await client.ConnectClient(server, message, port, 2);
 
             //DO STUFF WITH MESSAGE HERE//
             //Realistically should only update number of guesses left

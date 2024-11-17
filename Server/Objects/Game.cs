@@ -20,6 +20,7 @@ namespace Server
         private int remainingWords = 20;
         private List<string> wordsToGuess;
         public string clientId;
+        public string clientName;
   
 
         public Game(TcpClient client, string gameFile, string clientId)
@@ -30,31 +31,20 @@ namespace Server
             stream = client.GetStream();
         }
 
-        public struct Message
-        {
-            public string content;
-            public int client;
-            public int type;
-
-            public Message(string msg)
-            {
-                type = int.Parse(msg[0].ToString());
-                client = int.Parse(msg[1].ToString());
-                content = msg.Substring(1);
-            }
-        }
-
-        public void Play(Server.Message message) // I think this can be better, I want this function to have only 1 await. 
+        public void Play(string msg) // I think this can be better, I want this function to have only 1 await. 
         {
             try
             {
-                Console.WriteLine($"Message Type : {message.type}");
-                Console.WriteLine($"Message content : {message}");
+                string content = msg.Substring(2);
+                int type = msg[0];
 
-                switch (message.type)
+                Console.WriteLine($"Message Type : {type}");
+                Console.WriteLine($"Message content : {content}");
+
+                switch (type)
                 {
                     case 1:
-                        string name = message.content;
+                        string name = content;
                         InitalizeGame();
                         SendMessage(1, $"{currentWordPool}\n{remainingWords}");
                         Console.WriteLine($"Game started at {DateTime.Now}");
