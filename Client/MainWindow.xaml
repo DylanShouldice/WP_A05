@@ -70,7 +70,7 @@
                    HorizontalAlignment="Left"/>
         </Viewbox>
         <Viewbox Grid.Row="3">
-            <TextBox x:Name="NameInput" 
+            <TextBox x:Name="Name_txt" 
                  TextWrapping="Wrap" 
                  Background="#FFE9E9E9" 
                  Grid.Row="3" 
@@ -87,7 +87,7 @@
                    Grid.Row="4"/>
         </Viewbox>
         <Viewbox Grid.Row="5">
-            <TextBox x:Name="TimeLimitInput" 
+            <TextBox x:Name="TimeLimit_txt" 
                      TextWrapping="Wrap" 
                      Grid.Row="5"
                      VerticalAlignment="Top" 
@@ -104,7 +104,7 @@
                    Grid.Row="6"/>
         </Viewbox>
         <Viewbox Grid.Row="7">
-            <TextBox x:Name="IPInput" 
+            <TextBox x:Name="IP_txt" 
                      TextWrapping="Wrap" 
                      VerticalAlignment="Top" 
                      Background="#FFE9E9E9" 
@@ -121,7 +121,7 @@
                    Grid.Row="8"/>
         </Viewbox>
         <Viewbox Grid.Row="9">
-            <TextBox x:Name="PortInput" 
+            <TextBox x:Name="Port_txt" 
                      TextWrapping="Wrap" 
                      VerticalAlignment="Top" 
                      Background="#FFE9E9E9" 
@@ -129,12 +129,12 @@
                      Width="110"/>
         </Viewbox>
         <Viewbox Grid.Row="10" Grid.RowSpan="2" Width="150">
-            <Button Content="Start Game" 
+            <Button x:Name="Start_btn" Content="Start Game" 
                     VerticalAlignment="Top" 
                     FontWeight="Bold" 
-                    Grid.Row="10" Margin="0,2,0,2" Width="100"/>
+                    Grid.Row="10" Margin="0,2,0,2" Width="100" Click="start_btn_Click"/>
         </Viewbox>
-        <Border x:Name="InputCover" 
+        <Border x:Name="Input_Cover" 
         BorderBrush="Black" 
         BorderThickness="1" 
         Background="#99000000" 
@@ -182,12 +182,12 @@
                  Width="300"/>
         </Viewbox>
         <Viewbox Grid.Row="10" Grid.Column="1" Grid.RowSpan="2">
-            <Button Content="Guess Word" 
+            <Button x:Name="Guess_btn" Content="Guess Word" 
             VerticalAlignment="Top" 
             FontWeight="Bold" 
             Grid.Row="10" Width="100" Margin="0,10,0,10"/>
         </Viewbox>
-        <Border x:Name="gameCover" 
+        <Border x:Name="Game_Cover" 
         BorderBrush="Black" 
         BorderThickness="1" 
         Grid.Column="1" 

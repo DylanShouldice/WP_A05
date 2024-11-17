@@ -1,4 +1,12 @@
-﻿using System;
+﻿/*
+ * FILE             : Client_End.cs
+ * PROJECT          : A05 - InterProcessCommunication
+ * PROGRAMMER       : Oliver Gingerich
+ * FIRST VERSION    : 2024/11/15
+ * DESCRIPTION      : This file contains the Client_End class which should handle all connections between
+ *                    the UI and the server end.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,23 +25,36 @@ namespace Client
     }
     internal class Client_End
     {
-        private void ConnectClient(String server, String message)
+
+        private NetworkStream stream;
+
+        /*===========================================FUNCTION===========================================|
+         * Name     : ConnectClient                                                                     |
+         * Purpose  : receive messages from the server/UI levels and send them to the correct places.   |
+         * Inputs   : String server - IP address     String message      Int32 port                     |
+         * Outputs  : NONE                                                                              |
+         * Returns  : Message msg - Message to give to UI level                                         |
+         * =============================================================================================|
+         */
+        public Message ConnectClient(String server, String message, Int32 port)
         {
             try
             {
-                Int32 port = 13000;
                 TcpClient client = new TcpClient(server, port); //Creates TcpClient
 
-                //Convert information into byte data to send to Server here
+                Byte[] data = System.Text.Encoding.ASCII.GetBytes(message); //Taken from example - may need tweaking
 
                 NetworkStream stream = client.GetStream();  //Creating a stream
 
-                //Send data to server here
+                stream.Write(data, 0, data.Length); //Taken from example - may need tweaking
 
-                Byte[] data = new Byte[256];    //To store server response (game information)
+                data = new Byte[256];    //To store server response (game information)
                 String response = String.Empty; //String to store server response
 
-                //Convert response & process it as needed here
+                //Taken from example - may need tweaking
+                Int32 bytes = stream.Read(data, 0, data.Length);
+                response = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                //DO STUFF WITH DATA HERE
 
                 //Close everything
                 stream.Close();
@@ -47,6 +68,10 @@ namespace Client
             {
                 Console.WriteLine("SocketException: {0}", ex);
             }
+
+            //NOT WORKING HERE TO MAKE COMPILER HAPPY
+            Message msg = new Message();
+            return msg;
         }
     }
 }
