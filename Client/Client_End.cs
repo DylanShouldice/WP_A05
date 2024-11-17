@@ -7,6 +7,14 @@ using System.Net.Sockets;
 
 namespace Client
 {
+    public enum ClientStatus
+    {
+        CONNECTED,
+        DISCONNECTED,
+        AWAITING,
+        IDLE,
+        TME_OUT
+    }
     internal class Client_End
     {
         private void ConnectClient(String server, String message)

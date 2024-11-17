@@ -41,7 +41,7 @@ namespace Server
                     if (logQueue.TryDequeue(out string message))
                     {
                         Console.WriteLine(message);
-                        File.AppendAllText(logDir, message);
+                        File.AppendAllText(logDir, message + "\n");
                     }
                     else
                     {
@@ -54,11 +54,5 @@ namespace Server
                 }
             }
         }
-
-        static void SetLogDir()
-        {
-
-        }
-
     }
 }

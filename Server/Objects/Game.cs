@@ -18,18 +18,28 @@ namespace Server
         private string currentWordPool = "aaaaaaaaaaaaaaa";
         private int remainingWords = 20;
         private List<string> wordsToGuess;
+        private string clientId;
 
-        public Game (TcpClient client, string gameFile)
+        public Game (TcpClient client, string gameFile, string clientId)
         {
             this.client = client;
             gameDataDirectory = gameFile;
+            this.clientId = clientId;
             stream = client.GetStream();
         }
 
-        struct message
+        public struct message
         {
-            string content;
-            int type;
+            public string content;
+            public int client;
+            public int type;
+
+            public message(string msg)
+            {
+                type = int.Parse(msg[0].ToString());
+                client = int.Parse(msg[1].ToString());
+                content = msg.Substring(1);
+            }
         } 
 
         public async Task Play(CancellationToken cToken) // I think this can be better, I want this function to have only 1 await. 
@@ -38,13 +48,11 @@ namespace Server
             {
                 while(!cToken.IsCancellationRequested)
                 {
-                    string message = await ReadMessage();
-                    int messageType = int.Parse(message.Substring(0, 1)); // Due to our protocol first byte is message purpose
-                    Console.WriteLine($"Message Type : {messageType}");
+                    message message = new message(await ReadMessage());
+                    Console.WriteLine($"Message Type : {message.type}");
                     Console.WriteLine($"Message content : {message}");
 
-                    string content = message.Substring(1);
-                    if (messageType == 0x01)
+                    if (message.type == 1)
                     {
                         string name = content;
 
@@ -61,11 +69,11 @@ namespace Server
                             Console.WriteLine($"Message Type : {messageType}");
                             Console.WriteLine($"Message content : {message}");
 
-                            if (messageType == 0x02)
+                            if (messageType == 2)
                             {
                                 //CheckGuess(content); // This should send a message that signifies the guess
                             }
-                            else if (messageType == 0x03)
+                            else if (messageType == 3)
                             {
                                 SendMessage(3, "Leaving game");
                                 // await message here and get a yes / no
@@ -124,11 +132,11 @@ namespace Server
             {
                 wordsToGuess.Remove(guess);
                 remainingWords--;
-                SendMessage(0x02, $"Correct! Remaining words: {remainingWords}");
+                SendMessage(2, $"Correct! Remaining words: {remainingWords}");
             }
             else
             {
-                SendMessage(0x02, $"Incorrect. Remaining words: {remainingWords}");
+                SendMessage(2, $"Incorrect. Remaining words: {remainingWords}");
             }
         }
 
@@ -140,7 +148,7 @@ namespace Server
             stream.Write(buffer, 0, buffer.Length);
         }
 
-        private async Task<string> ReadMessage()
+        public async Task<string> ReadMessage()
         {
             var buffer = new byte[1024];
             var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
