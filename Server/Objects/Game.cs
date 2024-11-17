@@ -12,13 +12,13 @@ namespace Server
 {
     internal class Game
     {
-        private readonly TcpClient client;
+        public readonly TcpClient client;
         private readonly NetworkStream stream;
         private readonly string gameDataDirectory;
         private string currentWordPool = "aaaaaaaaaaaaaaa";
         private int remainingWords = 20;
         private List<string> wordsToGuess;
-        private string clientId;
+        public string clientId;
 
         public Game (TcpClient client, string gameFile, string clientId)
         {
@@ -28,13 +28,13 @@ namespace Server
             stream = client.GetStream();
         }
 
-        public struct message
+        public struct Message
         {
             public string content;
             public int client;
             public int type;
 
-            public message(string msg)
+            public Message(string msg)
             {
                 type = int.Parse(msg[0].ToString());
                 client = int.Parse(msg[1].ToString());
@@ -46,60 +46,32 @@ namespace Server
         {
             try
             {
-                while(!cToken.IsCancellationRequested)
+                while (!cToken.IsCancellationRequested)
                 {
-                    message message = new message(await ReadMessage());
+                    Message message = new Message(await ReadMessage());
                     Console.WriteLine($"Message Type : {message.type}");
                     Console.WriteLine($"Message content : {message}");
 
-                    if (message.type == 1)
+                    switch (message.type)
                     {
-                        string name = content;
+                        case 1: 
+                            string name = message.content;
+                            InitalizeGame();
+                            SendMessage(1, $"{currentWordPool}\n{remainingWords}");
+                            Console.WriteLine($"Game started at {DateTime.Now}");
+                            break;
 
-                       // InitalizeGame();
+                        case 2: 
+                            CheckGuess(message.content);
+                            break;
 
-                        SendMessage(0x01, $"{currentWordPool}\n{remainingWords}");
-                        Console.WriteLine($"Game started at {DateTime.Now}");
+                        case 3: 
+                            SendMessage(3, "Leaving game");
+                            return;
 
-                        while (remainingWords > 0 && !cToken.IsCancellationRequested)
-                        {
-                            message = await ReadMessage();
-                            messageType = int.Parse(message.Substring(0, 1));
-                            content = message.Substring(1);
-                            Console.WriteLine($"Message Type : {messageType}");
-                            Console.WriteLine($"Message content : {message}");
-
-                            if (messageType == 2)
-                            {
-                                //CheckGuess(content); // This should send a message that signifies the guess
-                            }
-                            else if (messageType == 3)
-                            {
-                                SendMessage(3, "Leaving game");
-                                // await message here and get a yes / no
-                                return;
-                            }
-                            else
-                            {
-                                Console.WriteLine("Do not know what to do");
-                            }
-                        }
-                        if (remainingWords == 0)
-                        {
-                            SendMessage(4, "Win");
-                        }
-                        else
-                        {
-                            SendMessage(4, "No more time sorry!");
-                        }
-
-                        // check for message if user wants to play again, then go through game loop again
-                        // otherwise say goodbye to user
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Invalid message, client tried to send game message without connection"); // If somehow the client sends a message with a code relating to a game, but their game is not yet active
+                        default:
+                            Console.WriteLine("Do not know what to do");
+                            break;
                     }
                 }
             }

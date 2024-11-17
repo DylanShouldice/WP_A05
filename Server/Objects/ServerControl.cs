@@ -38,9 +38,22 @@ namespace Server
         private readonly Logger logger;
         private readonly string gameDir;
         private int clientsConnected;
-        private int activeUsers;
-        
-        
+        private int totalUsers;
+
+        public struct Message
+        {
+            public string content;
+            public int client;
+            public int type;
+
+            public Message(string msg)
+            {
+                type = int.Parse(msg[0].ToString());
+                client = int.Parse(msg[1].ToString());
+                content = msg.Substring(1);
+            }
+        }
+
         public ServerControl(string ip, int port, string gameDir)
         {
             this.gameDir = gameDir;
@@ -109,7 +122,7 @@ namespace Server
                 try
                 {
                     game.Value.SendMessage(0x05, "Server is shutting down!");
-                    game.Key.Close();
+                    game.Value.client.Close();
                 }
                 catch (Exception e)
                 {
@@ -123,21 +136,25 @@ namespace Server
 
         private async Task HandleClient(TcpClient user, CancellationToken cToken)
         {
+            totalUsers++;
             clientsConnected++;
-
+            logger.Log($"Connection Made #{clientsConnected}");
+            logger.Log(user.Client.RemoteEndPoint.ToString()); // testing 
+            Game game = null;
             try
             {
-                string clientId = await ReadMessage();
-                Game game;
+                Message msg = new Message(await ReadMessage(user));
                 
-                if (!string.IsNullOrEmpty(clientId) && currentGames.TryGetValue(clientId, out game))
+                
+                if (currentGames.TryGetValue(msg.client.ToString(), out game))
                 {
-                    logger.Log($"Client reconnected with ID: {clientId}");
+                    logger.Log($"Client reconnected with ID: {msg.client}");
                 }
                 else
                 {
-                    logger.Log($"New connection wtih ID: {clientId}");
-                    clientId = GenerateId(); 
+                    game = new Game(user, "file", GenerateId());
+                    currentGames.TryAdd(game.clientId, game);
+                    SendMessage(user, 1, game.clientId);
                 }
                 
             }
@@ -147,31 +164,31 @@ namespace Server
             }
             finally
             {
-                currentGames.TryRemove(user, out _);
+                currentGames.TryRemove(game.clientId, out _);
                 user.Close();
                 clientsConnected--;
                 logger.Log($"Client : {user.Client.RemoteEndPoint} has disconnected");
             }
         }
 
-        public void SendMessage(byte messageType, string message)
+        private string GenerateId()
+        {
+            return totalUsers.ToString();
+        }
+
+        public void SendMessage(TcpClient client, byte messageType, string message)
         {
             var buffer = new byte[message.Length + 1];
             buffer[0] = messageType;
             Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
-            stream.Write(buffer, 0, buffer.Length);
+            client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        public async Task<string> ReadMessage()
+        public async Task<string> ReadMessage(TcpClient client)
         {
             var buffer = new byte[1024];
-            var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+            var bytesRead = await client.GetStream().ReadAsync(buffer, 0, buffer.Length);
             return Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
-        }
-
-        private int GenerateId(string toBeHashed)
-        {
-            
         }
 
         // TO-DO : Current Task create dynamic start up for server and logger that allows choice of ip, and which dir to get for gameDir,
