@@ -60,19 +60,21 @@ namespace Client
          * Returns  : Message msg - Message to give to UI level                                         |
          * =============================================================================================|
          */
-        public message ConnectClient(String server, String message, Int32 port)
+        public message ConnectClient(String server, String message, Int32 port, Byte indicator)
         {
             try
             {
                 TcpClient client = new TcpClient(server, port); //Creates TcpClient
 
-                Byte[] data = System.Text.Encoding.ASCII.GetBytes(message); //Taken from example - may need tweaking
-
                 NetworkStream stream = client.GetStream();  //Creating a stream
 
-                stream.Write(data, 0, data.Length); //Taken from example - may need tweaking
+                //Sending message to stream
+                Byte[] buffer = new Byte[message.Length + 1];
+                buffer[0] = indicator;
+                Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
+                stream.Write(buffer, 0, buffer.Length);
 
-                data = new Byte[256];    //To store server response (game information)
+                Byte[] data = new Byte[256];    //To store server response (game information)
                 String response = String.Empty; //String to store server response
 
                 //Taken from example - may need tweaking

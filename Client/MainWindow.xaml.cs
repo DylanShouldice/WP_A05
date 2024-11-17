@@ -54,7 +54,7 @@ namespace Client
             Int32 port;
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
-            message msg = client.ConnectClient(server, message, port);    //Send message and get info
+            message msg = client.ConnectClient(server, message, port, 1);    //Send message and get info
             
             //DO STUFF WITH MESSAGE HERE
             // if or switch statement?
@@ -88,11 +88,12 @@ namespace Client
             Int32 port;
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
-            message msg = client.ConnectClient(server, message, port);
+            message msg = client.ConnectClient(server, message, port, 2);
 
             //DO STUFF WITH MESSAGE HERE//
             //Realistically should only update number of guesses left
             //Or tell us server shut down :(
+            //Or tell us we win! :D
         }
     }
 }
