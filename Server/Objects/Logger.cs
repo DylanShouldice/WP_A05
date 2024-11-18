@@ -12,14 +12,29 @@ namespace Server
     internal class Logger
     {
         private string logDir = string.Empty;
+        private string logFile = string.Empty;
         private readonly ConcurrentQueue<string> logQueue = new ConcurrentQueue<string>();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
 
-        public Logger (string serverLogDir)
+        public Logger ()
         {
-            this.logDir = serverLogDir;
+            if (!Directory.Exists("Logs"))
+            {
+                Directory.CreateDirectory("Logs");
+
+            }
+            this.logDir = "Logs";
+            string numOfLogs = CountFilesWithName(logDir, "serverLog").ToString();
+            this.logFile = "serverLog_" + numOfLogs;
+
             Task.Run(() => ProcessMessageQueue());
+        }
+
+        public static int CountFilesWithName(string directoryPath, string partialFileName)
+        {
+            return Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories)
+                           .Count(f => Path.GetFileName(f).StartsWith(partialFileName));
         }
 
         public void Log (string message)
@@ -41,7 +56,7 @@ namespace Server
                     if (logQueue.TryDequeue(out string message))
                     {
                         Console.WriteLine(message);
-                        File.AppendAllText(logDir, message + "\n");
+                        File.AppendAllText(logDir + "/" + logFile, message + "\n");
                     }
                     else
                     {

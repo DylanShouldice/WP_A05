@@ -121,8 +121,7 @@ namespace Client
          */
         public void SendMessage(TcpClient client, string message)
         {
-            var buffer = new byte[message.Length + 1];
-            Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
+            var buffer = Encoding.ASCII.GetBytes(message);
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 

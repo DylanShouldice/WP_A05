@@ -13,37 +13,16 @@ using System.IO;
 
 namespace Server
 {
-    public struct Message
-    {
-        public string content;
-        public int client;
-        public int type;
 
-        public Message(string msg)
-        {
-            Logger log = new Logger("ree");
-            content = msg;
-            log.Log(content);
-            type = int.Parse(msg[0].ToString());
-            if (type != 1)
-            {
-                client = int.Parse(msg[1].ToString());
-            }
-            else
-            {
-                client = 0;
-            }
-        }
-    }
 
     internal class ServerControl
     {
         private readonly TcpListener listener;
-        private readonly ConcurrentDictionary<string, Game> currentGames = new ConcurrentDictionary<string, Game>();
+        private readonly ConcurrentDictionary<int, Game> currentGames = new ConcurrentDictionary<int, Game>();
         private readonly ConcurrentQueue<TcpClient> connectionQueue = new ConcurrentQueue<TcpClient>();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly Logger logger;
-        private readonly string gameDir;
+        private string gameDir;
         private int clientsConnected;
         private int totalUsers;
 
@@ -63,17 +42,26 @@ namespace Server
         public const int TIME_OUT = 2;
         public const int DISCONNECTED = 3;
 
-        public ServerControl(string ip, int port, string gameDir)
-        {
-            this.gameDir = gameDir;
-            listener = new TcpListener(IPAddress.Parse(ip), port);
-            logger = new Logger("test");
-        }
-
         public ServerControl(string ip, int port)
         {
+            Directory.CreateDirectory("gameDir");
+            this.gameDir = "gameDir";
             listener = new TcpListener(IPAddress.Parse(ip), port);
+            logger = new Logger();
         }
+
+        private string GetGameDir()
+        {
+            Console.WriteLine("Input game directory (folder holding game files)");
+            string fileDir = Console.ReadLine();
+            if (!Directory.Exists(fileDir))
+            {
+                Console.WriteLine($"{fileDir} does not exist");
+                return string.Empty;
+            }
+            return fileDir;
+        }
+
 
         /*
          * 
@@ -130,7 +118,7 @@ namespace Server
             {
                 try
                 {
-                    game.Value.SendMessage(0x05, "Server is shutting down!");
+                    game.Value.SendMessage(SERVER_MSG, "Server is shutting down!");
                     game.Value.client.Close();
                 }
                 catch (Exception e)
@@ -145,28 +133,38 @@ namespace Server
 
         private async Task HandleClient(TcpClient user, CancellationToken cToken)
         {
+            logger.Log($"New Connection, Total #{clientsConnected}");
             totalUsers++;
             clientsConnected++;
-            logger.Log($"Connection Made #{clientsConnected}");
             Game game = null;
             try
             {
-                string msg = await ReadMessage(user);
-                logger.Log(msg);
-                string content = msg.Substring(2);
-                if (msg[0] == )
+                string responseContent = string.Empty;
+                string[] msg = await ReadMessage(user);
+                if (msg[0] == "1")
+                {
+                    logger.Log($"New Client, Total #{totalUsers}");
+                    game = new Game(user, gameDir, GenerateId());
+                    game.InitalizeGame();
+                    currentGames.TryAdd(game.clientId, game);
+                    responseContent = $"{game.currentWordPool} {game.remainingWords}";
+                }
+                else if (msg[0] == "2")
                 {
                     logger.Log($"Client reconnected with ID: {msg[1]}");
                     currentGames.TryGetValue(game.clientId, out game);
+                    responseContent = await Task.Run(() => game.Play(msg));
+                }
+                else if (msg[0] == "3")
+                {
+
                 }
                 else
                 {
-                    game = new Game(user, "file", GenerateId());
-                    currentGames.TryAdd(game.clientId, game);
-                    SendMessage(user, 1, game.clientId);
-                }
-                await Task.Run(() => game.Play(msg));
 
+                }
+
+                SendMessage(user, 1, game.clientId, responseContent);
             }
             catch (Exception e)
             {
@@ -180,27 +178,29 @@ namespace Server
             }
         }
 
-        private string GenerateId()
+        private int GenerateId()
         {
-            return totalUsers.ToString();
+            return totalUsers;
         }
 
-        public void SendMessage(TcpClient client, byte messageType, string message)
+        public void SendMessage(TcpClient client, int type, int clientId, string content)
         {
-            var buffer = new byte[message.Length + 1];
-            buffer[0] = messageType;
-            Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
+            string toSend = $"{type} {clientId} {content}"; // ensure content is able to parsed by ' '
+            logger.Log($"Sending Message :{toSend}");
+            var buffer = new byte[toSend.Length + 1];
+            Encoding.ASCII.GetBytes(toSend, 0, toSend.Length, buffer, 1);
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        public async Task<string> ReadMessage(TcpClient client)
+        public async Task<string[]> ReadMessage(TcpClient client)
         {
             Byte[] buffer = new Byte[1024];
             NetworkStream stream = client.GetStream();
             int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-            return Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
+            string logString = Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
+            logger.Log($"Message Recieved {logString}");
+            return logString.Split(' ');
         }
-
         // TO-DO : Current Task create dynamic start up for server and logger that allows choice of ip, and which dir to get for gameDir,
         // then either create or find file for logDir. But dont nest log dir inside of server, incase you wamt to use it later
     }
