@@ -65,9 +65,7 @@ namespace Server
         public async Task StartServer() // Start server, accept clients
         {
             listener.Start();
-           // Thread admin = new Thread(AdminPanel);
             Thread connectionHandler = new Thread(AcceptConnections);
-           // admin.Start();
             connectionHandler.Start();
             
             logger.Log("SERVER STARTED");
@@ -88,19 +86,6 @@ namespace Server
                 {
                     logger.Log($"Exception caught -- ServerControl.StopServer() -- {e.Message}");
                 }
-            }
-        }
-
-        private async void AdminPanel()
-        {
-            while (!cts.IsCancellationRequested)
-            {
-                TextReader standardInput = Console.In;
-                TextWriter standardOutput = Console.Out;
-                string readAdmin = await standardInput.ReadLineAsync();
-                standardOutput.WriteAsync(readAdmin);
-                Console.SetOut(standardOutput);
-                Console.SetIn(standardInput);
             }
         }
 
@@ -156,7 +141,7 @@ namespace Server
                 if (msg[0] == "1")
                 {
                     logger.Log($"New Client, Total #{totalUsers}");
-                    game = new Game(gameDir, GenerateId());
+                    game = new Game(gameDir, GenerateId(msg[1]));
                     game.InitalizeGame();
                     currentGames.TryAdd(game.clientId, game);
                     responseContent = $"{game.currentWordPool} {game.remainingWords}";
@@ -222,9 +207,10 @@ namespace Server
             }
         }
 
-        private int GenerateId()
+        private int GenerateId(string nameToHash)
         {
-            return totalUsers;
+            logger.Log(nameToHash);
+            return (nameToHash.GetHashCode() % 256);
         }
 
         public void SendMessage(TcpClient client, int type, int clientId, string content)

@@ -64,7 +64,7 @@ namespace Client
             }
 
             string server = IP_txt.Text;    //IP address of server
-            string message = FIRST_CONNECT; //To send to the server
+            string message = FIRST_CONNECT + " " + Name_txt.Text; //To send to the server
             Int32 port;
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 

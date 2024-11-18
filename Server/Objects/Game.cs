@@ -13,7 +13,6 @@ namespace Server
 {
     internal class Game
     {
-        public readonly NetworkStream stream;
         public readonly string gameDataDirectory;
         public string currentWordPool = "aaaaaaaaaaaaaaa";
         public int remainingWords = 20;
