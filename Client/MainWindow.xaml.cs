@@ -25,7 +25,16 @@ namespace Client
 {
     public partial class MainWindow : Window
     {
+        //===SENDING CONSTANTS===//
+        public const string FIRST_CONNECT = "1";
+        public const string GAME_MSG = "2";
+        //===RECEIVING CONSTANTS===//
+        public const string GAMEINFO = "1";
+        public const string WIN = "2";
+        public const string SERVERDOWN = "3";
+
         private Client_End client;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -48,13 +57,12 @@ namespace Client
             //Not empty
             //Correct data type
 
-            //PLACEHOLDER FOR TESTING
-            string server = IP_txt.Text;
-            string message = "Start Game";  //will be the identifier sent to server?
+            string server = IP_txt.Text;    //IP address of server
+            string message = FIRST_CONNECT; //To send to the server
             Int32 port;
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
-            string respone = await client.ConnectClient(server, message, port, 1);    //Send message and get info
+            await client.ConnectClient(server, message, port);    //Send message and get info
             
             //DO STUFF WITH MESSAGE HERE
             // if or switch statement?
@@ -63,6 +71,10 @@ namespace Client
             //IF ALL INPUT IS VALID -> SWAP UI
             Game_Cover.Visibility = Visibility.Hidden;
             Input_Cover.Visibility = Visibility.Visible;
+
+            //Updating UI to reflect string and current words remaining
+            String_txt.Text = client.chars;
+            NumWords_txt.Text = client.numWords;
         }
 
         /*
@@ -84,11 +96,12 @@ namespace Client
             //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
             //PLACEHOLDER FOR TESTING
             string server = IP_txt.Text;
-            string message = "Word";  //will be the identifier sent to server?
+            string message = GAME_MSG + Guess_txt.Text; //Combine indicator with the guess
             Int32 port;
-            int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
-
-            string serverResponse = await client.ConnectClient(server, message, port, 2);
+            if (int.TryParse(Port_txt.Text, out port)) //Parse and assign the port
+            {
+                await client.ConnectClient(server, message, port);
+            }
 
             //DO STUFF WITH MESSAGE HERE//
             //Realistically should only update number of guesses left
