@@ -29,6 +29,10 @@ namespace Client
         //===SENDING CONSTANTS===//
         public const string FIRST_CONNECT = "1";
         public const string GAME_MSG = "2";
+        public const string EXITING_GAME = "3";
+        //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
+        public const string YES = "0";
+        public const string NO = "1";
         //===RECEIVING CONSTANTS===//
         public const string GAMEINFO = "1";
         public const string WIN = "2";
@@ -110,7 +114,7 @@ namespace Client
         private bool Validate_Input()
         {
             //===NAME VALIDATION===//
-            if (String.IsNullOrEmpty(Name_txt.Text))
+            if (String.IsNullOrEmpty(Name_txt.Text) || String.IsNullOrWhiteSpace(Name_txt.Text))
             {
                 NameError.Content = "Must input a name.";
                 return false;
@@ -126,9 +130,48 @@ namespace Client
             }
 
             //===VALIDATING TIME LIMIT===//
+            if (String.IsNullOrEmpty(TimeLimit_txt.Text) || String.IsNullOrWhiteSpace(TimeLimit_txt.Text))
+            {
+                TimeError.Content = "Must input a limit.";
+                return false;
+            }
+            else if (!int.TryParse(TimeLimit_txt.Text, out client.timeLimit))
+            {
+                TimeError.Content = "Must be an integer.";
+                return false;
+            }
+            else if (client.timeLimit < 1)
+            {
+                TimeError.Content = "Must be larger than 0.";
+                return false;
+            }
 
             return true;
         }
 
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            string server = IP_txt.Text;    //IP address of server
+            string message = $"{EXITING_GAME} {client.gameID}"; //To send to the server
+            Int32 port;
+            int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
+
+            await client.ConnectClient(server, message, port);    //Send message and get info
+
+            if (client.exitConfirm)
+            {
+               MessageBoxResult result = MessageBox.Show("Game in progress; Are you sure you want to exit?", "Game in Progress", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        await client.ConfirmClose(server, YES, port);
+                        break;
+                    case MessageBoxResult.No:
+                        await client.ConfirmClose(server, NO, port);
+                        e.Cancel = true;
+                        break;
+                }
+            }
+        }
     }
 }

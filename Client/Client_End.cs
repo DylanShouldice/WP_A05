@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Diagnostics;
+using System.Windows;
 
 namespace Client
 {
@@ -29,6 +30,7 @@ namespace Client
         public const int FIRST_CONNECT  = 1;
         public const int GAME_MSG       = 2;
         public const int EXITING_GAME   = 3;
+        public const int TIME_UP        = 4;
         //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
         public const int YES = 0;
         public const int NO = 1;
@@ -43,6 +45,7 @@ namespace Client
         private TcpClient client;
 
         public int gameID;
+        public int timeLimit;
         public string chars;
         public string numWords;
         public bool playAgain = false;
@@ -138,6 +141,25 @@ namespace Client
             Byte[] buffer = new Byte[1024];
             int bytesRead = await client.GetStream().ReadAsync(buffer, 0, buffer.Length);
             return Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
+        }
+
+        /*======================FUNCTION============================|
+         * Name     : ConfirmClose                                  |
+         * Purpose  : To confirm game closing to server.            |
+         * Inputs   : string server     string yesNo    Int32 port  |
+         * Outputs  : NONE                                          |
+         * Returns  : NONE                                          |
+         * =========================================================|
+         */
+        public async Task<string> ConfirmClose(string server, string yesNo, Int32 port)
+        {
+            //==SENDING/RETREIVING DATA===//
+            client = new TcpClient(server, port);
+            stream = client.GetStream();
+            string message = $"{yesNo} {gameID}";
+
+            SendMessage(client, message);
+            return yesNo; //For the sake of returning
         }
     }
 }

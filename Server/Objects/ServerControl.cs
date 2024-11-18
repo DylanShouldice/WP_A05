@@ -171,6 +171,8 @@ namespace Server
                 }
                 else if (msg[0] == "3") // Prompt for exit
                 {
+                    logger.Log($"Client reconnected with ID: {msg[1]}");
+                    currentGames.TryGetValue(int.Parse(msg[1]), out game);
                     responseContent = " ";
                     type = 5; // send message that will make client prompt user 'are you sure
                     SendMessage(user, type, game.clientId, responseContent);
