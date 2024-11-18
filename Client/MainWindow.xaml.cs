@@ -96,7 +96,7 @@ namespace Client
             //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
             //PLACEHOLDER FOR TESTING
             string server = IP_txt.Text;
-            string message = GAME_MSG + Guess_txt.Text; //Combine indicator with the guess
+            string message = $"{GAME_MSG} {Guess_txt.Text}"; //Combine indicator with the guess
             Int32 port;
             if (int.TryParse(Port_txt.Text, out port)) //Parse and assign the port
             {

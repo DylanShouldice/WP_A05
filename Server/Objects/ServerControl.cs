@@ -31,9 +31,9 @@ namespace Server
         // Communcation
 
         public const int FIRST_CONNECT = 1;
-        public const int GAME_MSG      = 2;
-        public const int NON_GAME_MSG  = 3;
-        public const int SERVER_MSG    = 4;
+        public const int GAME_MSG = 2;
+        public const int NON_GAME_MSG = 3;
+        public const int SERVER_MSG = 4;
 
         // Client Status
 
@@ -62,15 +62,14 @@ namespace Server
             return fileDir;
         }
 
-
-        /*
-         * 
-         */
         public async Task StartServer() // Start server, accept clients
         {
             listener.Start();
+           // Thread admin = new Thread(AdminPanel);
             Thread connectionHandler = new Thread(AcceptConnections);
+           // admin.Start();
             connectionHandler.Start();
+            
             logger.Log("SERVER STARTED");
             logger.Log($"Waiting for clients");
 
@@ -89,6 +88,19 @@ namespace Server
                 {
                     logger.Log($"Exception caught -- ServerControl.StopServer() -- {e.Message}");
                 }
+            }
+        }
+
+        private async void AdminPanel()
+        {
+            while (!cts.IsCancellationRequested)
+            {
+                TextReader standardInput = Console.In;
+                TextWriter standardOutput = Console.Out;
+                string readAdmin = await standardInput.ReadLineAsync();
+                standardOutput.WriteAsync(readAdmin);
+                Console.SetOut(standardOutput);
+                Console.SetIn(standardInput);
             }
         }
 
@@ -140,6 +152,7 @@ namespace Server
             try
             {
                 string responseContent = string.Empty;
+                int type = 0;
                 string[] msg = await ReadMessage(user);
                 if (msg[0] == "1")
                 {
@@ -148,23 +161,27 @@ namespace Server
                     game.InitalizeGame();
                     currentGames.TryAdd(game.clientId, game);
                     responseContent = $"{game.currentWordPool} {game.remainingWords}";
+                    type = 1;
                 }
                 else if (msg[0] == "2")
                 {
                     logger.Log($"Client reconnected with ID: {msg[1]}");
                     currentGames.TryGetValue(game.clientId, out game);
                     responseContent = await Task.Run(() => game.Play(msg));
+                    type = 2;
                 }
                 else if (msg[0] == "3")
                 {
-
+                    responseContent = " ";
+                    type = 3; // send message that will make client prompt user 'are you sur'
+                    SendMessage(user, type, game.clientId, responseContent);
                 }
                 else
                 {
-
+                    logger.Log($"Input not being processed");
                 }
 
-                SendMessage(user, 1, game.clientId, responseContent);
+                SendMessage(user, type, game.clientId, responseContent);
             }
             catch (Exception e)
             {
