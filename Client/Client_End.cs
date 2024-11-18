@@ -70,7 +70,7 @@ namespace Client
 
                 NetworkStream stream = client.GetStream();  //Creating a stream
 
-                SendMessage(client, "1Start Game");
+                SendMessage(client, "1");
                 //Sending message to stream
                 //Byte[] buffer = new Byte[message.Length + 1];
                 //buffer[0] = indicator;
@@ -103,8 +103,7 @@ namespace Client
 
         public void SendMessage(TcpClient client, string message)
         {
-            var buffer = new byte[message.Length + 1];
-            Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
+            var buffer = Encoding.ASCII.GetBytes(message);
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 

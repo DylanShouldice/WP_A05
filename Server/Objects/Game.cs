@@ -7,23 +7,23 @@ using System.Runtime.Remoting.Messaging;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Server;
+
 
 namespace Server
 {
     internal class Game
     {
         public readonly TcpClient client;
-        private readonly NetworkStream stream;
-        private readonly string gameDataDirectory;
-        private string currentWordPool = "aaaaaaaaaaaaaaa";
-        private int remainingWords = 20;
-        private List<string> wordsToGuess;
-        public string clientId;
+        public readonly NetworkStream stream;
+        public readonly string gameDataDirectory;
+        public string currentWordPool = "aaaaaaaaaaaaaaa";
+        public int remainingWords = 20;
+        public List<string> wordsToGuess;
+        public int clientId;
         public string clientName;
-  
 
-        public Game(TcpClient client, string gameFile, string clientId)
+
+        public Game(TcpClient client, string gameFile, int clientId)
         {
             this.client = client;
             gameDataDirectory = gameFile;
@@ -31,39 +31,11 @@ namespace Server
             stream = client.GetStream();
         }
 
-        public void Play(string msg) // I think this can be better, I want this function to have only 1 await. 
+        public string Play(string[] msg) // I think this can be better, I want this function to have only 1 await. 
         {
             try
             {
-                string content = msg.Substring(2);
-                int type = msg[0];
-
-                Console.WriteLine($"Message Type : {type}");
-                Console.WriteLine($"Message content : {content}");
-
-                switch (type)
-                {
-                    case 1:
-                        string name = content;
-                        InitalizeGame();
-                        SendMessage(1, $"{currentWordPool}\n{remainingWords}");
-                        Console.WriteLine($"Game started at {DateTime.Now}");
-                        break;
-
-                    case 2:
-                        // CheckGuess(message.content);
-                        SendMessage(0, "Checking Guess");
-                        break;
-
-                    case 3:
-                        SendMessage(3, "Leaving game");
-                        return;
-
-                    default:
-                        Console.WriteLine("Do not know what to do");
-                        break;
-
-                }
+                CheckGuess(msg[2]);
             }
             catch (OperationCanceledException)
             {
@@ -73,9 +45,10 @@ namespace Server
             {
                 Console.WriteLine($"Exception caught in 'Play()' {e.Message}");
             }
+            return remainingWords.ToString();
         }
 
-        private void InitalizeGame() // Sets variables of game object neccesary for the game
+        public void InitalizeGame() // Sets variables of game object neccesary for the game
         {
             string[] filePool = Directory.GetFiles(gameDataDirectory, "*.txt");
             Random rand = new Random();
