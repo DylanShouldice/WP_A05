@@ -47,6 +47,7 @@ namespace Client
         public string numWords;
         public bool playAgain = false;
         public bool serverdown = false;
+        public bool exitConfirm = false;
 
 
         /*===========================================FUNCTION===========================================|
@@ -75,17 +76,21 @@ namespace Client
 
                 switch (indicator)
                 {
-                    case GAMEINFO:
+                    case GAME_INFO:
                         int.TryParse(parsed[1], out gameID);    //Parse game ID to send to server in future
                         chars = parsed[2];  //String of characters
                         numWords = parsed[3];
                         break;
-                    case PLAYAGAIN:
+                    case PLAY_AGAIN:
                         playAgain = true;   //Indicates to UI layer that play again screen needs to appear
                         break;
-                    case SERVERDOWN:
+                    case SERVER_DOWN:
                         serverdown = true;
                         break;
+                    case EXIT_CONFIRM:
+                        exitConfirm = true;
+                        break;
+
                 }
 
                 //Close everything

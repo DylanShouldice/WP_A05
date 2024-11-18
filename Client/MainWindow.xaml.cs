@@ -63,10 +63,6 @@ namespace Client
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
             await client.ConnectClient(server, message, port);    //Send message and get info
-            
-            //DO STUFF WITH MESSAGE HERE
-            // if or switch statement?
-            //Should realistically only have to change UI here - Not sure what other msg would be sent
 
             //IF ALL INPUT IS VALID -> SWAP UI
             Game_Cover.Visibility = Visibility.Hidden;
@@ -108,5 +104,11 @@ namespace Client
             //Or tell us server shut down :(
             //Or tell us we win! :D
         }
+
+        private void Validate_Input()
+        {
+
+        }
+
     }
 }
