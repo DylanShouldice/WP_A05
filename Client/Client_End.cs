@@ -7,8 +7,6 @@
  *                    the UI and the server end.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
@@ -16,29 +14,6 @@ using System.Diagnostics;
 
 namespace Client
 {
-    public enum ClientStatus
-    {
-        CONNECTED,
-        DISCONNECTED,
-        AWAITING,
-        IDLE,
-        TME_OUT
-    }
-
-    public struct message
-    {
-        public string content;
-        public int client;
-        public int type;
-
-        public message(string msg)
-        {
-            type = int.Parse(msg[0].ToString());
-            client = int.Parse(msg[1].ToString());
-            content = msg.Substring(1);
-        }
-    }
-
     /*
      * =================================================CLASS================================================|
      * Title    : Client_End                                                                                |
@@ -50,36 +25,68 @@ namespace Client
      */
     internal class Client_End
     {
+        //===SENDING CONSTANTS===//
+        public const int FIRST_CONNECT  = 1;
+        public const int GAME_MSG       = 2;
+        public const int EXITING_GAME   = 3;
+        //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
+        public const int YES = 0;
+        public const int NO = 1;
+        //===RECEIVING CONSTANTS===//
+        public const int GAME_INFO      = 1;    //Message has string & num of words
+        public const int WORD_COUNT     = 2;
+        public const int PLAY_AGAIN     = 3;    //User won or time is up - prompt play again
+        public const int SERVER_DOWN    = 4;    //Server shut down - End game
+        public const int EXIT_CONFIRM   = 5;
 
         private NetworkStream stream;
+        private TcpClient client;
+
+        public int gameID;
+        public string chars;
+        public string numWords;
+        public bool playAgain = false;
+        public bool serverdown = false;
+
 
         /*===========================================FUNCTION===========================================|
          * Name     : ConnectClient                                                                     |
          * Purpose  : receive messages from the server/UI levels and send them to the correct places.   |
          * Inputs   : String server - IP address     String message      Int32 port                     |
          * Outputs  : NONE                                                                              |
-         * Returns  : Message msg - Message to give to UI level                                         |
+         * Returns  : NONE                                                                              |
          * =============================================================================================|
          */
-        public async Task <string> ConnectClient(String server, String message, Int32 port, Byte indicator)
+        public async Task ConnectClient(String server, String message, Int32 port)
         {
             string serverResponse = string.Empty;
             try
             {
-                TcpClient client = new TcpClient(server, port); //Creates TcpClient
+                //==SENDING/RETREIVING DATA===//
+                client = new TcpClient(server, port);
+                stream = client.GetStream();
 
-                NetworkStream stream = client.GetStream();  //Creating a stream
-
-                SendMessage(client, "1");
-                //Sending message to stream
-                //Byte[] buffer = new Byte[message.Length + 1];
-                //buffer[0] = indicator;
-                //Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
-                //stream.Write(buffer, 0, buffer.Length);
-
+                SendMessage(client, message);
                 serverResponse = await ReadMessage(client);
-               
-                //DO STUFF WITH DATA HERE
+                
+                //===UNDERSTANDING DATA RETREIVED===//
+                string[] parsed = serverResponse.Split(' ');
+                int.TryParse(parsed[0], out int indicator); //Parse indicator message
+
+                switch (indicator)
+                {
+                    case GAMEINFO:
+                        int.TryParse(parsed[1], out gameID);    //Parse game ID to send to server in future
+                        chars = parsed[2];  //String of characters
+                        numWords = parsed[3];
+                        break;
+                    case PLAYAGAIN:
+                        playAgain = true;   //Indicates to UI layer that play again screen needs to appear
+                        break;
+                    case SERVERDOWN:
+                        serverdown = true;
+                        break;
+                }
 
                 //Close everything
                 stream.Close();
@@ -97,16 +104,30 @@ namespace Client
             {
                 Trace.WriteLine($"Exception Caught in : 'ConnectClient()' {e}");
             }
-            
-            return serverResponse;
         }
 
+        /*======================FUNCTION================|
+         * Name     : SendMessage                       |
+         * Purpose  : To send a message to the server.  |
+         * Inputs   : TcpClient client  string message  |
+         * Outputs  : NONE                              |
+         * Returns  : NONE                              |
+         * =============================================|
+         */
         public void SendMessage(TcpClient client, string message)
         {
             var buffer = Encoding.ASCII.GetBytes(message);
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
+        /*======================FUNCTION================|
+         * Name     : ReadMessage                       |
+         * Purpose  : To read a message from the server.|
+         * Inputs   : TcpClient client  string message  |
+         * Outputs  : NONE                              |
+         * Returns  : Task<string> - Message read       |
+         * =============================================|
+         */
         public async Task<string> ReadMessage(TcpClient client)
         {
             Byte[] buffer = new Byte[1024];

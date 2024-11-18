@@ -165,16 +165,17 @@
             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="String:" FontWeight="Bold" Height="20" Margin="0,5,0,0" />
         </Viewbox>
         <Viewbox Grid.Row="4" Grid.Column="1" VerticalAlignment="Top">
-            <TextBlock Text="qwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiop" HorizontalAlignment="Left" Margin="15,0,15,0" TextWrapping="WrapWithOverflow" />
+            <TextBlock x:Name="String_txt" 
+                       Text="qwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiopqwertyuiop" HorizontalAlignment="Left" Margin="15,0,15,0" TextWrapping="WrapWithOverflow" />
         </Viewbox>
         <Viewbox Grid.Row="5" Grid.Column="1">
             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Number of Words Left:" Margin="10,0,0,0" FontWeight="Bold" Height="20" />
         </Viewbox>
         <Viewbox Grid.Row="6" Grid.Column="1" VerticalAlignment="Top">
-            <TextBlock Text="100" HorizontalAlignment="Left" Margin="15,0,15,0" TextWrapping="WrapWithOverflow" />
+            <TextBlock x:Name="NumWords_txt" Text="100" HorizontalAlignment="Left" Margin="15,0,15,0" TextWrapping="WrapWithOverflow" />
         </Viewbox>
         <Viewbox Grid.Row="8" Grid.Column="1">
-            <TextBox x:Name="GuessInput" 
+            <TextBox x:Name="Guess_txt" 
                  TextWrapping="Wrap" 
                  Grid.Row="5"
                  VerticalAlignment="Top" 
