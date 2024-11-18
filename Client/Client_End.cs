@@ -7,8 +7,6 @@
  *                    the UI and the server end.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
@@ -16,29 +14,6 @@ using System.Diagnostics;
 
 namespace Client
 {
-    //public enum ClientStatus
-    //{
-    //    CONNECTED,
-    //    DISCONNECTED,
-    //    AWAITING,
-    //    IDLE,
-    //    TME_OUT
-    //}
-
-    //public struct message
-    //{
-    //    public string content;
-    //    public int client;
-    //    public int type;
-
-    //    public message(string msg)
-    //    {
-    //        type = int.Parse(msg[0].ToString());
-    //        client = int.Parse(msg[1].ToString());
-    //        content = msg.Substring(1);
-    //    }
-    //}
-
     /*
      * =================================================CLASS================================================|
      * Title    : Client_End                                                                                |
@@ -53,10 +28,16 @@ namespace Client
         //===SENDING CONSTANTS===//
         public const int FIRST_CONNECT  = 1;
         public const int GAME_MSG       = 2;
+        public const int EXITING_GAME   = 3;
+        //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
+        public const int YES = 0;
+        public const int NO = 1;
         //===RECEIVING CONSTANTS===//
-        public const int GAMEINFO   = 1;    //Message has string & num of words
-        public const int PLAYAGAIN  = 2;    //User won or time is up - prompt play again
-        public const int SERVERDOWN = 3;    //Server shut down - End game
+        public const int GAME_INFO      = 1;    //Message has string & num of words
+        public const int WORD_COUNT     = 2;
+        public const int PLAY_AGAIN     = 3;    //User won or time is up - prompt play again
+        public const int SERVER_DOWN    = 4;    //Server shut down - End game
+        public const int EXIT_CONFIRM   = 5;
 
         private NetworkStream stream;
         private TcpClient client;
@@ -125,6 +106,14 @@ namespace Client
             }
         }
 
+        /*======================FUNCTION================|
+         * Name     : SendMessage                       |
+         * Purpose  : To send a message to the server.  |
+         * Inputs   : TcpClient client  string message  |
+         * Outputs  : NONE                              |
+         * Returns  : NONE                              |
+         * =============================================|
+         */
         public void SendMessage(TcpClient client, string message)
         {
             var buffer = new byte[message.Length + 1];
@@ -132,6 +121,14 @@ namespace Client
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
+        /*======================FUNCTION================|
+         * Name     : ReadMessage                       |
+         * Purpose  : To read a message from the server.|
+         * Inputs   : TcpClient client  string message  |
+         * Outputs  : NONE                              |
+         * Returns  : Task<string> - Message read       |
+         * =============================================|
+         */
         public async Task<string> ReadMessage(TcpClient client)
         {
             Byte[] buffer = new Byte[1024];
