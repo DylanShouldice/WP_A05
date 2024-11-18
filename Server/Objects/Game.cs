@@ -13,7 +13,6 @@ namespace Server
 {
     internal class Game
     {
-        public readonly TcpClient client;
         public readonly NetworkStream stream;
         public readonly string gameDataDirectory;
         public string currentWordPool = "aaaaaaaaaaaaaaa";
@@ -23,12 +22,10 @@ namespace Server
         public string clientName;
 
 
-        public Game(TcpClient client, string gameFile, int clientId)
+        public Game(string gameFile, int clientId)
         {
-            this.client = client;
             gameDataDirectory = gameFile;
             this.clientId = clientId;
-            stream = client.GetStream();
         }
 
         public string Play(string[] msg) // I think this can be better, I want this function to have only 1 await. 
@@ -39,7 +36,6 @@ namespace Server
             }
             catch (OperationCanceledException)
             {
-                SendMessage(4, "Server shutting down");
             }
             catch (Exception e)
             {
@@ -67,28 +63,13 @@ namespace Server
             {
                 wordsToGuess.Remove(guess);
                 remainingWords--;
-                SendMessage(2, $"Correct! Remaining words: {remainingWords}");
             }
             else
             {
-                SendMessage(2, $"Incorrect. Remaining words: {remainingWords}");
+
             }
         }
 
-        public void SendMessage(byte messageType, string message)
-        {
-            var buffer = new byte[message.Length + 1];
-            buffer[0] = messageType;
-            Encoding.ASCII.GetBytes(message, 0, message.Length, buffer, 1);
-            stream.Write(buffer, 0, buffer.Length);
-        }
-
-        public async Task<string> ReadMessage()
-        {
-            var buffer = new byte[1024];
-            var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-            return Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
-        }
 
     }
 }

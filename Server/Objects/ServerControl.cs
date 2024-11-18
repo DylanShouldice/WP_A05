@@ -130,8 +130,7 @@ namespace Server
             {
                 try
                 {
-                    game.Value.SendMessage(SERVER_MSG, "Server is shutting down!");
-                    game.Value.client.Close();
+
                 }
                 catch (Exception e)
                 {
@@ -157,7 +156,7 @@ namespace Server
                 if (msg[0] == "1")
                 {
                     logger.Log($"New Client, Total #{totalUsers}");
-                    game = new Game(user, gameDir, GenerateId());
+                    game = new Game(gameDir, GenerateId());
                     game.InitalizeGame();
                     currentGames.TryAdd(game.clientId, game);
                     responseContent = $"{game.currentWordPool} {game.remainingWords}";
@@ -166,22 +165,48 @@ namespace Server
                 else if (msg[0] == "2")
                 {
                     logger.Log($"Client reconnected with ID: {msg[1]}");
-                    currentGames.TryGetValue(game.clientId, out game);
+                    currentGames.TryGetValue(int.Parse(msg[1]), out game);
                     responseContent = await Task.Run(() => game.Play(msg));
                     type = 2;
                 }
-                else if (msg[0] == "3")
+                else if (msg[0] == "3") // Prompt for exit
                 {
                     responseContent = " ";
-                    type = 3; // send message that will make client prompt user 'are you sur'
+                    type = 5; // send message that will make client prompt user 'are you sure
                     SendMessage(user, type, game.clientId, responseContent);
+                    string[] conformation = await ReadMessage(user);
+                    if (conformation[0] == "0")
+                    {
+                        SendMessage(user, type, game.clientId, responseContent);
+                        currentGames.TryRemove(game.clientId, out _);
+                    }
+                }
+                else if (msg[0] == "4") // Play again
+                {
+                    responseContent = " ";
+                    type = 4;
+                    SendMessage(user, type, game.clientId, responseContent);
+                    string[] playAgain = await ReadMessage(user);
+                    if (playAgain[0] == "0")
+                    {
+                        game.InitalizeGame();
+                        responseContent = $"{game.currentWordPool} {game.remainingWords}";
+                        SendMessage(user, type, game.clientId, responseContent);
+                    }
+                    else
+                    {
+                        SendMessage(user, type, game.clientId, responseContent);
+                        currentGames.TryRemove(game.clientId, out _);
+                    }
                 }
                 else
                 {
                     logger.Log($"Input not being processed");
                 }
-
-                SendMessage(user, type, game.clientId, responseContent);
+                if (msg[0] != "3" || msg[0] != "4")
+                {
+                    SendMessage(user, type, game.clientId, responseContent);
+                }
             }
             catch (Exception e)
             {
@@ -204,8 +229,7 @@ namespace Server
         {
             string toSend = $"{type} {clientId} {content}"; // ensure content is able to parsed by ' '
             logger.Log($"Sending Message :{toSend}");
-            var buffer = new byte[toSend.Length + 1];
-            Encoding.ASCII.GetBytes(toSend, 0, toSend.Length, buffer, 1);
+            var buffer = Encoding.ASCII.GetBytes(toSend);
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
