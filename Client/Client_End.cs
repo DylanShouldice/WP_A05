@@ -47,6 +47,7 @@ namespace Client
         public string numWords;
         public bool playAgain = false;
         public bool serverdown = false;
+        public bool exitConfirm = false;
 
 
         /*===========================================FUNCTION===========================================|
@@ -86,6 +87,10 @@ namespace Client
                     case SERVER_DOWN:
                         serverdown = true;
                         break;
+                    case EXIT_CONFIRM:
+                        exitConfirm = true;
+                        break;
+
                 }
 
                 //Close everything

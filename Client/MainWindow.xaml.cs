@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -53,9 +54,10 @@ namespace Client
          */
         private async void start_btn_Click(object sender, RoutedEventArgs e)
         {
-            //VALIDATE CONTENTS OF FIELDS HERE//
-            //Not empty
-            //Correct data type
+            if (!Validate_Input())
+            {
+                return; //Leave function if values are not valid
+            }
 
             string server = IP_txt.Text;    //IP address of server
             string message = FIRST_CONNECT; //To send to the server
@@ -63,10 +65,6 @@ namespace Client
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
             await client.ConnectClient(server, message, port);    //Send message and get info
-            
-            //DO STUFF WITH MESSAGE HERE
-            // if or switch statement?
-            //Should realistically only have to change UI here - Not sure what other msg would be sent
 
             //IF ALL INPUT IS VALID -> SWAP UI
             Game_Cover.Visibility = Visibility.Hidden;
@@ -96,7 +94,7 @@ namespace Client
             //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
             //PLACEHOLDER FOR TESTING
             string server = IP_txt.Text;
-            string message = $"{GAME_MSG} {Guess_txt.Text}"; //Combine indicator with the guess
+            string message = GAME_MSG + " " + client.gameID + " " + Guess_txt.Text; //Combine indicator with the guess
             Int32 port;
             if (int.TryParse(Port_txt.Text, out port)) //Parse and assign the port
             {
@@ -108,5 +106,29 @@ namespace Client
             //Or tell us server shut down :(
             //Or tell us we win! :D
         }
+
+        private bool Validate_Input()
+        {
+            //===NAME VALIDATION===//
+            if (String.IsNullOrEmpty(Name_txt.Text))
+            {
+                NameError.Content = "Must input a name.";
+                return false;
+            }
+            else if (!Regex.IsMatch(Name_txt.Text, @"^[a-zA-Z]+$"))
+            {
+                NameError.Content = "Must only be letters.";
+                return false;
+            }
+            else
+            {
+                NameError.Content = String.Empty;
+            }
+
+            //===VALIDATING TIME LIMIT===//
+
+            return true;
+        }
+
     }
 }

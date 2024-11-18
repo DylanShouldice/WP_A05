@@ -69,6 +69,14 @@
                    Grid.Row="2" 
                    HorizontalAlignment="Left"/>
         </Viewbox>
+        <Viewbox Grid.Row="2" HorizontalAlignment="Right">
+            <Label x:Name="NameError"
+           Background="{x:Null}" 
+           VerticalAlignment="Bottom" 
+           FontWeight="Bold" 
+           Grid.Row="2" 
+           HorizontalAlignment="Left" Foreground="Red"/>
+        </Viewbox>
         <Viewbox Grid.Row="3">
             <TextBox x:Name="Name_txt" 
                  TextWrapping="Wrap" 
@@ -84,7 +92,17 @@
                    VerticalAlignment="Bottom" 
                    Background="{x:Null}" 
                    FontWeight="Bold" 
-                   Grid.Row="4"/>
+                   Grid.Row="4" FontSize="10"/>
+        </Viewbox>
+        <Viewbox Grid.Row="4" HorizontalAlignment="Right">
+            <Label x:Name="TimeError"
+               Background="{x:Null}" 
+               VerticalAlignment="Bottom" 
+               FontWeight="Bold" 
+               Grid.Row="2" 
+               HorizontalAlignment="Left" 
+               Foreground="Red" 
+               FontSize="7"/>
         </Viewbox>
         <Viewbox Grid.Row="5">
             <TextBox x:Name="TimeLimit_txt" 
@@ -103,6 +121,14 @@
                    FontWeight="Bold" 
                    Grid.Row="6"/>
         </Viewbox>
+        <Viewbox Grid.Row="6" HorizontalAlignment="Right">
+            <Label x:Name="IPError"
+               Background="{x:Null}" 
+               VerticalAlignment="Bottom" 
+               FontWeight="Bold" 
+               Grid.Row="2" 
+               HorizontalAlignment="Left" Foreground="Red"/>
+        </Viewbox>
         <Viewbox Grid.Row="7">
             <TextBox x:Name="IP_txt" 
                      TextWrapping="Wrap" 
@@ -119,6 +145,14 @@
                    Background="{x:Null}" 
                    FontWeight="Bold"  
                    Grid.Row="8"/>
+        </Viewbox>
+        <Viewbox Grid.Row="8" HorizontalAlignment="Right">
+            <Label x:Name="PortError"
+               Background="{x:Null}" 
+               VerticalAlignment="Bottom" 
+               FontWeight="Bold" 
+               Grid.Row="2" 
+               HorizontalAlignment="Left" Foreground="Red"/>
         </Viewbox>
         <Viewbox Grid.Row="9">
             <TextBox x:Name="Port_txt" 
