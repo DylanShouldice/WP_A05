@@ -9,7 +9,7 @@ namespace Server
 {
     internal class Game
     {
-        public NetworkStream stream;
+        public TcpClient client;
         public readonly string gameDataDirectory;
         public string currentWordPool = "aaaaaaaaaaaaaaa";
         public int remainingWords = 20;
@@ -19,8 +19,9 @@ namespace Server
         public bool close;
 
 
-        public Game(string gameFile, int clientId)
+        public Game(TcpClient user, string gameFile, int clientId)
         {
+            this.client = user;
             gameDataDirectory = gameFile;
             this.clientId = clientId;
         }
@@ -45,7 +46,7 @@ namespace Server
         {
             string[] filePool = Directory.GetFiles(gameDataDirectory, "*.txt");
             Random rand = new Random();
-            string gameFile = "gameDir\\test.txt"; //filePool[rand.Next(filePool.Length)];
+            string gameFile = filePool[rand.Next(filePool.Length)];    //"gameDir\\test.txt";
             string[] gameFileArr = File.ReadAllLines(gameFile);
 
             currentWordPool = gameFileArr[0];

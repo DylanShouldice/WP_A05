@@ -18,6 +18,7 @@ namespace Server
         private readonly ConcurrentQueue<TcpClient> connectionQueue = new ConcurrentQueue<TcpClient>();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly Logger logger;
+        private bool isShuttingDown = false;
         private string gameDir;
         private int clientsConnected;
         private int totalUsers;
@@ -31,6 +32,7 @@ namespace Server
         public const int DENY = 3;
         public const int OPEN_REPLAY_PROMPT = 4;
         public const int OPEN_EXIT_PROMPT = 5;
+        public const int SERVER_SHUTDOWN = 7;
 
         // REQUEST
 
@@ -51,21 +53,12 @@ namespace Server
             logger = new Logger();
         }
 
-        private string GetGameDir()
-        {
-            Console.WriteLine("Input game directory (folder holding game files)");
-            string fileDir = Console.ReadLine();
-            if (!Directory.Exists(fileDir))
-            {
-                Console.WriteLine($"{fileDir} does not exist");
-                return string.Empty;
-            }
-            return fileDir;
-        }
+
 
         public async Task StartServer() // Start server, accept clients
         {
             listener.Start();
+            _ = Task.Run(() => MonitorServerStopInput(), cts.Token);
             Thread connectionHandler = new Thread(AcceptConnections);
             connectionHandler.Start();
 
@@ -90,6 +83,7 @@ namespace Server
             }
         }
 
+
         internal void AcceptConnections()
         {
             while (!cts.IsCancellationRequested)
@@ -106,86 +100,46 @@ namespace Server
             }
         }
 
-        public void StopServer()
+
+        private async void MonitorServerStopInput()
         {
-            logger.Log("Server stop initated");
-            cts.Cancel();
-            listener.Stop();
-
-            foreach (var game in currentGames)
+            while (!cts.IsCancellationRequested)
             {
-                try
+                if (Console.ReadKey(true).Key == ConsoleKey.C) // Check for 'c' key press
                 {
 
-                }
-                catch (Exception e)
-                {
-                    logger.Log($"Exception caught -- ServerControl.StopServer() -- {e.Message}");
                 }
             }
-
-            currentGames.Clear();
-            logger.Log($"SERVER CLOSING");
         }
+
+
+
+
+        /* ---------- CLIENT HANDLING ---------- */
+
 
         private async Task HandleClient(TcpClient user, CancellationToken cToken)
         {
-            totalUsers++;
-            clientsConnected++;
             Game game = null;
             try
             {
                 string responseContent = string.Empty;
-                bool initGame = false;
                 string[] msg = await ReadMessage(user);
                 int respType = 0;
                 int reqType = int.Parse(msg[0]);
 
-                if (reqType == FIRST_CONNECT) // good
+                if (reqType == FIRST_CONNECT)
                 {
-                    logger.Log($"New Client, Total #{totalUsers}");
-                    game = new Game(gameDir, GenerateId(msg[1]));
-                    game.InitalizeGame();
-                    responseContent = $"{game.currentWordPool} {game.remainingWords}";
-                    currentGames.TryAdd(game.clientId, game);                                       // Add game to list
-                    respType = FIRST_CONNECT;
+                    HandleFirstConnect(user, out game, out responseContent, out respType, msg);
                 }
                 else
                 {
                     currentGames.TryGetValue(int.Parse(msg[1]), out game);
-                    if (reqType == GAME_MSG)
-                    {
-                        logger.Log($"Client reconnected with ID: {msg[1]}, Total #{totalUsers}");
-                        responseContent = await Task.Run(() => game.Play(msg));
-                        if (game.remainingWords == 0) // check if that was last character
-                        {
-                            respType = OPEN_REPLAY_PROMPT;
-                        }
-                        else
-                        {
-                            respType = GAME_MSG;
-                        }
-                    }
-                    else if (reqType == CLIENT_TRYING_TO_LEAVE) // release client stuff
-                    {
-                        logger.Log($"Client reconnected with ID: {msg[1]}");
-                        responseContent = " ";
-                        respType = 5; // send message that will make client prompt user 'are you sure
-                    }
-                    if (reqType == CLIENT_LOVES_GAME || initGame)
-                    {
-                        game.InitalizeGame();
-                        responseContent = $"{game.currentWordPool} {game.remainingWords}";
-                    }
-                    else if (reqType == BYE_CLIENT) // Play again
-                    {
-                        currentGames.TryRemove(int.Parse(msg[1]), out _);
-                    }
+                    logger.Log($"Client {{ {game.clientId} }} reconnected");
+                    HandleSubsuqentRequests(user, reqType, msg, game, out responseContent, out respType);
                 }
 
-
                 SendMessage(user, respType, game.clientId, responseContent);
-
             }
             catch (Exception e)
             {
@@ -193,35 +147,77 @@ namespace Server
             }
             finally
             {
-                user.Close();
-                clientsConnected--;
-                logger.Log($"Client : {user.Client.RemoteEndPoint} has disconnected");
+                CloseConnection(game);
             }
         }
 
-        private void RestartGame(Game game)
+        private void CloseConnection(Game user)
         {
-
+            logger.Log($"Client {{ {user.clientId} }} connection closed");
+            user.client.Close();
         }
+
+        private void HandleSubsuqentRequests(TcpClient user, int reqType, string[] msg, Game game, out string responseContent, out int respType)
+        {
+            responseContent = string.Empty;
+            respType = 0;
+            game.client = user;
+
+            switch (reqType)
+            {
+                case GAME_MSG:
+                    responseContent = game.Play(msg);
+                    respType = game.remainingWords == 0 ? OPEN_REPLAY_PROMPT : GAME_MSG; // short-hand if statement if remWord == 0, open_replay else game_msg
+                    break;
+                case CLIENT_TRYING_TO_LEAVE:
+                    responseContent = " ";
+                    respType = OPEN_EXIT_PROMPT;
+                    break;
+                case CLIENT_OUT_OF_TIME:
+                    respType = OPEN_REPLAY_PROMPT;
+                    break;
+                case CLIENT_LOVES_GAME:
+                    game.InitalizeGame();
+                    respType = STRING_AND_WORD_COUNT;
+                    responseContent = $"{game.currentWordPool} {game.remainingWords}";
+                    break;
+                case BYE_CLIENT:
+                    currentGames.TryRemove(int.Parse(msg[1]), out _);
+                    break;
+            }
+        }
+
+
+        private void HandleFirstConnect(TcpClient user, out Game game, out string responseContent, out int respType, string[] msg)
+        {
+            game = new Game(user, gameDir, GenerateId(msg[1]));
+            logger.Log($"New game made name: {msg[1]}");
+            game.InitalizeGame();
+            game.clientName = msg[1];
+            responseContent = $"{game.currentWordPool} {game.remainingWords}";
+            currentGames.TryAdd(game.clientId, game);
+            respType = STRING_AND_WORD_COUNT;
+        }
+
 
         private int GenerateId(string nameToHash)
         {
-            logger.Log(nameToHash);
-            return (nameToHash.GetHashCode() % 256);
+            return (nameToHash.GetHashCode() % 256); // Ensures it will not take up more then 1 character
         }
+
+
+
+        /* ---------- SEND / RECIEVE ---------- */
+
 
         public void SendMessage(TcpClient client, int respType, int clientId, string content)
         {
-            string toSend = $"{respType} {clientId} {content}"; // ensure content is able to parsed by ' '
+            string toSend = $"{respType} {clientId} {content}";
             logger.Log($"Sending Message :{toSend}");
             var buffer = Encoding.ASCII.GetBytes(toSend);
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        public void test()
-        {
-
-        }
 
         public async Task<string[]> ReadMessage(TcpClient client)
         {
@@ -232,40 +228,7 @@ namespace Server
             logger.Log($"Message Recieved {logString}");
             return logString.Split(' ');
         }
-        // TO-DO : Current Task create dynamic start up for server and logger that allows choice of ip, and which dir to get for gameDir,
-        // then either create or find file for logDir. But dont nest log dir inside of server, incase you wamt to use it later
+
+
     }
 }
-
-
-
-
-//responseContent = " ";
-//respType = 4;
-//SendMessage(user, respType, game.clientId, responseContent);
-//string[] playAgain = await ReadMessage(user);
-//if (playAgain[0] == "0")
-//{
-//    game.InitalizeGame();
-//    responseContent = $"{game.currentWordPool} {game.remainingWords}";
-//    SendMessage(user, respType, game.clientId, responseContent);
-//}
-//else
-//{
-//    SendMessage(user, respType, game.clientId, responseContent);
-//    currentGames.TryRemove(game.clientId, out _);
-//}
-
-
-
-//logger.Log($"Client reconnected with ID: {msg[1]}");
-//currentGames.TryGetValue(int.Parse(msg[1]), out game);
-//responseContent = " ";
-//respType = 5; // send message that will make client prompt user 'are you sure
-//SendMessage(user, respType, game.clientId, responseContent);
-//string[] conformation = await ReadMessage(user);
-//if (conformation[0] == "0")
-//{
-//    SendMessage(user, respType, game.clientId, responseContent);
-//    currentGames.TryRemove(game.clientId, out _);
-//}
