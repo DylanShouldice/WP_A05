@@ -230,6 +230,9 @@
                  Background="#FFE9E9E9" 
                  Width="300"/>
         </Viewbox>
+        <Viewbox Grid.Column="1" Grid.Row="7">
+            <Label x:Name="guessError" Foreground="Red" Background="{x:Null}"/>
+        </Viewbox>
         <Viewbox Grid.Row="10" Grid.Column="1" Grid.RowSpan="2">
             <Button x:Name="Guess_btn" Content="Guess Word" 
             VerticalAlignment="Top" 

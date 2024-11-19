@@ -157,6 +157,14 @@ namespace Client
             //VALIDATE CONTENTS OF FIELDS HERE
             //Alphabetical letters only
             //Not empty
+            if (String.IsNullOrEmpty(Guess_txt.Text.Trim()))
+            {
+                guessError.Content = "Guess may not be empty.";
+            }
+            else if (!Regex.IsMatch(Name_txt.Text, @"^[a-zA-Z]+$"))
+            {
+                guessError.Content = "Guess must be a letter.";
+            }
 
             //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
             //PLACEHOLDER FOR TESTING
