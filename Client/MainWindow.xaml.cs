@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -263,11 +264,41 @@ namespace Client
                 TimeError.Content = "Must be larger than 0.";
                 return false;
             }
+            else
+            {
+                TimeError.Content = String.Empty;
+            }
 
             //===VALIDATING THE IP===//
             if (String.IsNullOrEmpty(IP_txt.Text) || String.IsNullOrWhiteSpace(IP_txt.Text))
             {
                 IPError.Content = "Must input an IP.";
+                return false;
+            }
+            if (!IPAddress.TryParse(IP_txt.Text, out IPAddress IP))
+            {
+                IPError.Content = "Input must be an IP.";
+                return false;
+            }
+            else
+            {
+                IPError.Content = String.Empty;
+            }
+
+            //===VALIDATING THE PORT===//
+            if (String.IsNullOrEmpty(Port_txt.Text.Trim()))
+            {
+                PortError.Content = "Must input a port.";
+                return false;
+            }
+            else if (!int.TryParse(Port_txt.Text, out int port))
+            {
+                PortError.Content = "Must be an integer.";
+                return false;
+            }
+            else
+            {
+                PortError.Content = String.Empty;
             }
 
             return true;
