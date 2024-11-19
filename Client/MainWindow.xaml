@@ -169,6 +169,13 @@
                      Grid.Row="9"
                      Width="110"/>
         </Viewbox>
+        <Viewbox Grid.Row="10">
+            <Label x:Name="ConnectError" Background="{x:Null}" Foreground="Red" 
+                   Content="Failed to connect. Please try again."
+                   Visibility="Hidden">
+                
+            </Label>
+        </Viewbox>
         <Viewbox Grid.Row="10" Grid.RowSpan="2" Width="150">
             <Button x:Name="Start_btn" Content="Start Game" 
                     VerticalAlignment="Top" 

@@ -45,7 +45,7 @@ namespace Client
         public const int EXIT_CONFIRM   = 5;
 
         private NetworkStream stream;
-        private TcpClient client;
+        public TcpClient client;
 
         public int gameID;
         public int timeLimit;
@@ -116,6 +116,7 @@ namespace Client
             catch (SocketException ex)
             {
                 Trace.WriteLine("SocketException: {0}", ex.ToString());
+
             }
             catch (Exception e)
             {

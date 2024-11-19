@@ -78,16 +78,24 @@ namespace Client
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
             await client.ConnectClient(server, message, port);    //Send message and get info
+            if (client.client != null)
+            {
+                //IF ALL INPUT IS VALID -> SWAP UI
+                Game_Cover.Visibility = Visibility.Hidden;
+                Input_Cover.Visibility = Visibility.Visible;
 
-            //IF ALL INPUT IS VALID -> SWAP UI
-            Game_Cover.Visibility = Visibility.Hidden;
-            Input_Cover.Visibility = Visibility.Visible;
+                //Updating UI to reflect string and current words remaining
+                String_txt.Text = client.chars;
+                NumWords_txt.Text = client.numWords;
 
-            //Updating UI to reflect string and current words remaining
-            String_txt.Text = client.chars;
-            NumWords_txt.Text = client.numWords;
+                ConnectError.Visibility = Visibility.Hidden;    //Hide connection error incase it was triggered previously
 
-            Start_Timer();
+                Start_Timer();
+            }
+            else
+            {
+                ConnectError.Visibility = Visibility.Visible;
+            }
         }
 
         /*
