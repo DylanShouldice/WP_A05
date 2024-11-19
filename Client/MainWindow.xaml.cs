@@ -37,6 +37,8 @@ namespace Client
         public const string GAMEINFO = "1";
         public const string WIN = "2";
         public const string SERVERDOWN = "3";
+        //===OTHER CONSTANTS===//
+        public const int PORT = 13000;
 
         private Client_End client;
 
@@ -103,6 +105,19 @@ namespace Client
             if (int.TryParse(Port_txt.Text, out port)) //Parse and assign the port
             {
                 await client.ConnectClient(server, message, port);
+
+                if (client.playAgain == true)
+                {
+                    if (!await restart())
+                    {
+                        Game_Cover.Visibility = Visibility.Visible;
+                        Input_Cover.Visibility = Visibility.Hidden;
+                    }
+                }
+                else
+                {
+                    NumWords_txt.Text = client.numWords;
+                }
             }
 
             //DO STUFF WITH MESSAGE HERE//
@@ -111,6 +126,47 @@ namespace Client
             //Or tell us we win! :D
         }
 
+        private async Task<bool> restart()
+        {
+            string msg = string.Empty;
+            bool restart = false;
+
+            if (client.timeUp == true)
+            {
+                msg = "You ran out of time. Play again?";
+            }
+            else
+            {
+                msg = "You win, congrats! Play again?";
+            }
+
+            MessageBoxResult result = MessageBox.Show(msg, "Play Again?", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            switch (result)
+            {
+                case MessageBoxResult.Yes:
+                    msg = YES;
+                    restart = true;
+                    break;
+                case MessageBoxResult.No:
+                    msg = NO;
+                    restart = false;
+                    break;
+            }
+
+            await client.ConnectClient(client.server, msg, PORT);
+            client.playAgain = false;
+            return restart;
+        }
+
+        /*
+         * ===================FUNCTION==============================|
+         * Name     : Validate_Input                                |
+         * Purpose  : To validate user input                        |
+         * Inputs   : NONE                                          |
+         * Outputs  : Displays error messages upon invalid input.   |
+         * Returns  : A bool indicating if input was valid.         |
+         * =========================================================|
+         */
         private bool Validate_Input()
         {
             //===NAME VALIDATION===//
@@ -149,6 +205,16 @@ namespace Client
             return true;
         }
 
+
+        /*
+         * ======================================FUNCTION==============================|
+         * Name     : Window_Closing                                                    |
+         * Purpose  : Confirm if user actually wishes to quit while game is in session. |
+         * Inputs   : object sender     System.ComponentModel.CancelEventArgs e         |
+         * Outputs  : Displays a message box asking if user wishes to exit.             |
+         * Returns  : NONE                                                              |
+         * =============================================================================|
+         */
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             string server = IP_txt.Text;    //IP address of server
@@ -160,7 +226,7 @@ namespace Client
 
             if (client.exitConfirm)
             {
-               MessageBoxResult result = MessageBox.Show("Game in progress; Are you sure you want to exit?", "Game in Progress", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+               MessageBoxResult result = MessageBox.Show("Game in progress; Are you sure you want to exit?", "Game in Progress", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 switch (result)
                 {
                     case MessageBoxResult.Yes:

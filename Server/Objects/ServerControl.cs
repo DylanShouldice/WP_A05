@@ -152,7 +152,15 @@ namespace Server
                     logger.Log($"Client reconnected with ID: {msg[1]}");
                     currentGames.TryGetValue(int.Parse(msg[1]), out game);
                     responseContent = await Task.Run(() => game.Play(msg));
-                    type = 2;
+
+                    if (game.remainingWords == 0)
+                    {
+                        type = 4;
+                    }
+                    else
+                    {
+                        type = 2;
+                    }
                 }
                 else if (msg[0] == "3") // Prompt for exit
                 {

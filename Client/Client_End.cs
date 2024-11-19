@@ -37,8 +37,8 @@ namespace Client
         //===RECEIVING CONSTANTS===//
         public const int GAME_INFO      = 1;    //Message has string & num of words
         public const int WORD_COUNT     = 2;
-        public const int PLAY_AGAIN     = 3;    //User won or time is up - prompt play again
-        public const int SERVER_DOWN    = 4;    //Server shut down - End game
+        public const int SERVER_DOWN    = 3;    //User won or time is up - prompt play again
+        public const int PLAY_AGAIN     = 4;    //Server shut down - End game
         public const int EXIT_CONFIRM   = 5;
 
         private NetworkStream stream;
@@ -48,9 +48,11 @@ namespace Client
         public int timeLimit;
         public string chars;
         public string numWords;
+        public string server;
         public bool playAgain = false;
         public bool serverdown = false;
         public bool exitConfirm = false;
+        public bool timeUp = false;
 
 
         /*===========================================FUNCTION===========================================|
@@ -83,6 +85,9 @@ namespace Client
                         int.TryParse(parsed[1], out gameID);    //Parse game ID to send to server in future
                         chars = parsed[2];  //String of characters
                         numWords = parsed[3];
+                        break;
+                    case WORD_COUNT:
+                        numWords = parsed[2];
                         break;
                     case PLAY_AGAIN:
                         playAgain = true;   //Indicates to UI layer that play again screen needs to appear
