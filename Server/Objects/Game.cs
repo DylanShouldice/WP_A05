@@ -1,18 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Net.Sockets;
-using System;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Runtime.Remoting.Messaging;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Net.Sockets;
 
 
 namespace Server
 {
     internal class Game
     {
+        public NetworkStream stream;
         public readonly string gameDataDirectory;
         public string currentWordPool = "aaaaaaaaaaaaaaa";
         public int remainingWords = 20;
@@ -47,7 +44,7 @@ namespace Server
         {
             string[] filePool = Directory.GetFiles(gameDataDirectory, "*.txt");
             Random rand = new Random();
-            string gameFile = filePool[rand.Next(filePool.Length)];
+            string gameFile = "gameDir\\test.txt"; //filePool[rand.Next(filePool.Length)];
             string[] gameFileArr = File.ReadAllLines(gameFile);
 
             currentWordPool = gameFileArr[0];
