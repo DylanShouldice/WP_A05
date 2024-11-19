@@ -10,14 +10,6 @@ using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace Client
@@ -43,6 +35,7 @@ namespace Client
         private Client_End client;
         TimeSpan time;
         DispatcherTimer dpt;
+
 
         public MainWindow()
         {
@@ -105,7 +98,7 @@ namespace Client
             {
                 time = time.Add(TimeSpan.FromSeconds(-1));
                 //Update timer in UI
-                Timer.Content = time.ToString("c");
+                gameTimer.Content = time.ToString("c");
             }
         }
 
@@ -172,16 +165,16 @@ namespace Client
             switch (result)
             {
                 case MessageBoxResult.Yes:
-                    msg = YES;
+                    msg = "5";
                     restart = true;
                     break;
                 case MessageBoxResult.No:
-                    msg = NO;
+                    msg = "6";
                     restart = false;
                     break;
             }
 
-            await client.ConnectClient(client.server, msg, PORT);
+            await client.ConnectClient(IP_txt.Text, msg, PORT);
             client.playAgain = false;
             return restart;
         }

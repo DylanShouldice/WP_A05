@@ -16,6 +16,7 @@ namespace Server
         public List<string> wordsToGuess;
         public int clientId;
         public string clientName;
+        public bool close;
 
 
         public Game(string gameFile, int clientId)

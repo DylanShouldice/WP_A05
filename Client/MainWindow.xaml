@@ -61,7 +61,7 @@
         </Border>
 
         <Viewbox VerticalAlignment="Top" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center">
-            <Label x:Name="Timer" FontWeight="Bold" 
+            <Label x:Name="gameTimer" FontWeight="Bold" 
                    Background="{x:Null}" 
                    Foreground="#FF6677AB" Content="0:00" FontSize="72">
             </Label>

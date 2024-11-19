@@ -7,12 +7,10 @@
  *                    the UI and the server end.
  */
 using System;
+using System.Diagnostics;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Sockets;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Navigation;
 
 namespace Client
 {
@@ -28,19 +26,19 @@ namespace Client
     internal class Client_End
     {
         //===SENDING CONSTANTS===//
-        public const int FIRST_CONNECT  = 1;
-        public const int GAME_MSG       = 2;
-        public const int EXITING_GAME   = 3;
-        public const int TIME_UP        = 4;
+        public const int FIRST_CONNECT = 1;
+        public const int GAME_MSG = 2;
+        public const int EXITING_GAME = 3;
+        public const int TIME_UP = 4;
         //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
         public const int YES = 0;
         public const int NO = 1;
         //===RECEIVING CONSTANTS===//
-        public const int GAME_INFO      = 1;    //Message has string & num of words
-        public const int WORD_COUNT     = 2;
-        public const int SERVER_DOWN    = 3;    //User won or time is up - prompt play again
-        public const int PLAY_AGAIN     = 4;    //Server shut down - End game
-        public const int EXIT_CONFIRM   = 5;
+        public const int GAME_INFO = 1;    //Message has string & num of words
+        public const int WORD_COUNT = 2;
+        public const int SERVER_DOWN = 3;    //User won or time is up - prompt play again
+        public const int PLAY_AGAIN = 4;    //Server shut down - End game
+        public const int EXIT_CONFIRM = 5;
 
         private NetworkStream stream;
         private TcpClient client;
@@ -76,7 +74,7 @@ namespace Client
 
                 SendMessage(client, message);
                 serverResponse = await ReadMessage(client);
-                
+
                 //===UNDERSTANDING DATA RETREIVED===//
                 string[] parsed = serverResponse.Split(' ');
                 int.TryParse(parsed[0], out int indicator); //Parse indicator message

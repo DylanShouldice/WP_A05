@@ -5,11 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Collections.Concurrent;
-using System.Diagnostics.Eventing.Reader;
-using Client;
-using System.IO;
-using System.Windows;
+using System.Threading.Tasks;
 
 namespace Server
 {
@@ -26,21 +22,26 @@ namespace Server
         private int clientsConnected;
         private int totalUsers;
 
-        // Consts 
-
         // Communcation
+
+        // RESPONSE
+
+        public const int STRING_AND_WORD_COUNT = 1;
+        public const int WORD_COUNT = 2;
+        public const int DENY = 3;
+        public const int OPEN_REPLAY_PROMPT = 4;
+        public const int OPEN_EXIT_PROMPT = 5;
+
+        // REQUEST
 
         public const int FIRST_CONNECT = 1;
         public const int GAME_MSG = 2;
-        public const int NON_GAME_MSG = 3;
-        public const int SERVER_MSG = 4;
+        public const int CLIENT_TRYING_TO_LEAVE = 3;
+        public const int CLIENT_OUT_OF_TIME = 4;
+        public const int CLIENT_LOVES_GAME = 5;
+        public const int BYE_CLIENT = 6;
 
-        // Client Status
 
-        public const int CONNECTED = 0;
-        public const int AWAITING = 1;
-        public const int TIME_OUT = 2;
-        public const int DISCONNECTED = 3;
 
         public ServerControl(string ip, int port)
         {
@@ -129,86 +130,62 @@ namespace Server
 
         private async Task HandleClient(TcpClient user, CancellationToken cToken)
         {
-            logger.Log($"New Connection, Total #{clientsConnected}");
             totalUsers++;
             clientsConnected++;
             Game game = null;
             try
             {
                 string responseContent = string.Empty;
-                int type = 0;
+                bool initGame = false;
                 string[] msg = await ReadMessage(user);
-                if (msg[0] == "1")
+                int respType = 0;
+                int reqType = int.Parse(msg[0]);
+
+                if (reqType == FIRST_CONNECT) // good
                 {
                     logger.Log($"New Client, Total #{totalUsers}");
                     game = new Game(gameDir, GenerateId(msg[1]));
                     game.InitalizeGame();
-                    currentGames.TryAdd(game.clientId, game);
                     responseContent = $"{game.currentWordPool} {game.remainingWords}";
-                    type = 1;
-                }
-                else if (msg[0] == "2")
-                {
-                    logger.Log($"Client reconnected with ID: {msg[1]}");
-                    currentGames.TryGetValue(int.Parse(msg[1]), out game);
-                    responseContent = await Task.Run(() => game.Play(msg));
-
-                    if (game.remainingWords == 0)
-                    {
-                        type = 4;
-                        game.InitalizeGame();
-                        responseContent = $"{game.currentWordPool} {game.remainingWords}";
-                        SendMessage(user, type, game.clientId, responseContent);
-                    }
-                    else
-                    {
-                        type = 2;
-                    }
-                }
-                else if (msg[0] == "3") // Prompt for exit
-                {
-                    logger.Log($"Client reconnected with ID: {msg[1]}");
-                    currentGames.TryGetValue(int.Parse(msg[1]), out game);
-                    responseContent = " ";
-                    type = 5; // send message that will make client prompt user 'are you sure
-                    SendMessage(user, type, game.clientId, responseContent);
-                    string[] conformation = await ReadMessage(user);
-                    if (conformation[0] == "0")
-                    {
-                        SendMessage(user, type, game.clientId, responseContent);
-                        currentGames.TryRemove(game.clientId, out _);
-                    }
-                }
-                else if (msg[0] == "4") // Play again
-                {
-                    responseContent = " ";
-                    type = 4;
-                    SendMessage(user, type, game.clientId, responseContent);
-                    string[] playAgain = await ReadMessage(user);
-                    if (playAgain[0] == "0")
-                    {
-                        game.InitalizeGame();
-                        responseContent = $"{game.currentWordPool} {game.remainingWords}";
-                        SendMessage(user, type, game.clientId, responseContent);
-                    }
-                    else
-                    {
-                        SendMessage(user, type, game.clientId, responseContent);
-                        currentGames.TryRemove(game.clientId, out _);
-                    }
-                }
-                else if (msg[0] == "6")
-                {
-                    currentGames.TryRemove(game.clientId, out _);
+                    currentGames.TryAdd(game.clientId, game);                                       // Add game to list
+                    respType = FIRST_CONNECT;
                 }
                 else
                 {
-                    logger.Log($"Input not being processed");
+                    currentGames.TryGetValue(int.Parse(msg[1]), out game);
+                    if (reqType == GAME_MSG)
+                    {
+                        logger.Log($"Client reconnected with ID: {msg[1]}, Total #{totalUsers}");
+                        responseContent = await Task.Run(() => game.Play(msg));
+                        if (game.remainingWords == 0) // check if that was last character
+                        {
+                            respType = OPEN_REPLAY_PROMPT;
+                        }
+                        else
+                        {
+                            respType = GAME_MSG;
+                        }
+                    }
+                    else if (reqType == CLIENT_TRYING_TO_LEAVE) // release client stuff
+                    {
+                        logger.Log($"Client reconnected with ID: {msg[1]}");
+                        responseContent = " ";
+                        respType = 5; // send message that will make client prompt user 'are you sure
+                    }
+                    if (reqType == CLIENT_LOVES_GAME || initGame)
+                    {
+                        game.InitalizeGame();
+                        responseContent = $"{game.currentWordPool} {game.remainingWords}";
+                    }
+                    else if (reqType == BYE_CLIENT) // Play again
+                    {
+                        currentGames.TryRemove(int.Parse(msg[1]), out _);
+                    }
                 }
-                if (msg[0] != "3" || msg[0] != "4")
-                {
-                    SendMessage(user, type, game.clientId, responseContent);
-                }
+
+
+                SendMessage(user, respType, game.clientId, responseContent);
+
             }
             catch (Exception e)
             {
@@ -233,9 +210,9 @@ namespace Server
             return (nameToHash.GetHashCode() % 256);
         }
 
-        public void SendMessage(TcpClient client, int type, int clientId, string content)
+        public void SendMessage(TcpClient client, int respType, int clientId, string content)
         {
-            string toSend = $"{type} {clientId} {content}"; // ensure content is able to parsed by ' '
+            string toSend = $"{respType} {clientId} {content}"; // ensure content is able to parsed by ' '
             logger.Log($"Sending Message :{toSend}");
             var buffer = Encoding.ASCII.GetBytes(toSend);
             client.GetStream().Write(buffer, 0, buffer.Length);
@@ -259,3 +236,36 @@ namespace Server
         // then either create or find file for logDir. But dont nest log dir inside of server, incase you wamt to use it later
     }
 }
+
+
+
+
+//responseContent = " ";
+//respType = 4;
+//SendMessage(user, respType, game.clientId, responseContent);
+//string[] playAgain = await ReadMessage(user);
+//if (playAgain[0] == "0")
+//{
+//    game.InitalizeGame();
+//    responseContent = $"{game.currentWordPool} {game.remainingWords}";
+//    SendMessage(user, respType, game.clientId, responseContent);
+//}
+//else
+//{
+//    SendMessage(user, respType, game.clientId, responseContent);
+//    currentGames.TryRemove(game.clientId, out _);
+//}
+
+
+
+//logger.Log($"Client reconnected with ID: {msg[1]}");
+//currentGames.TryGetValue(int.Parse(msg[1]), out game);
+//responseContent = " ";
+//respType = 5; // send message that will make client prompt user 'are you sure
+//SendMessage(user, respType, game.clientId, responseContent);
+//string[] conformation = await ReadMessage(user);
+//if (conformation[0] == "0")
+//{
+//    SendMessage(user, respType, game.clientId, responseContent);
+//    currentGames.TryRemove(game.clientId, out _);
+//}
