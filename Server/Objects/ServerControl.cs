@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
-using System.Net;
 using System.Threading;
-using System.Collections.Concurrent;
-using System.Diagnostics.Eventing.Reader;
-using Client;
-using System.IO;
+using System.Threading.Tasks;
 
 namespace Server
 {
@@ -67,7 +63,7 @@ namespace Server
             listener.Start();
             Thread connectionHandler = new Thread(AcceptConnections);
             connectionHandler.Start();
-            
+
             logger.Log("SERVER STARTED");
             logger.Log($"Waiting for clients");
 
@@ -156,6 +152,9 @@ namespace Server
                     if (game.remainingWords == 0)
                     {
                         type = 4;
+                        game.InitalizeGame();
+                        responseContent = $"{game.currentWordPool} {game.remainingWords}";
+                        SendMessage(user, type, game.clientId, responseContent);
                     }
                     else
                     {
@@ -194,6 +193,10 @@ namespace Server
                         currentGames.TryRemove(game.clientId, out _);
                     }
                 }
+                else if (msg[0] == "6")
+                {
+                    currentGames.TryRemove(game.clientId, out _);
+                }
                 else
                 {
                     logger.Log($"Input not being processed");
@@ -215,6 +218,11 @@ namespace Server
             }
         }
 
+        private void RestartGame(Game game)
+        {
+
+        }
+
         private int GenerateId(string nameToHash)
         {
             logger.Log(nameToHash);
@@ -227,6 +235,11 @@ namespace Server
             logger.Log($"Sending Message :{toSend}");
             var buffer = Encoding.ASCII.GetBytes(toSend);
             client.GetStream().Write(buffer, 0, buffer.Length);
+        }
+
+        public void test()
+        {
+
         }
 
         public async Task<string[]> ReadMessage(TcpClient client)
