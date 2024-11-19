@@ -32,6 +32,7 @@ namespace Client
         public const string GAME_MSG = "2";
         public const string EXITING_GAME = "3";
         public const string TIME_UP = "4";
+        public const string PLAY_AGAIN = "5";
         public const string EXIT = "6";
         //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
         public const string YES = "0";
@@ -88,6 +89,15 @@ namespace Client
             Start_Timer();
         }
 
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : Start_Timer                                   |
+        * Purpose  : To start the Timer for a game.                |
+        * Inputs   : NONE                                          |
+        * Outputs  : NONE                                          |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
         public void Start_Timer()
         {
             dpt = new DispatcherTimer();
@@ -97,12 +107,23 @@ namespace Client
             dpt.Start();
         }
 
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : Timer_Tick                                    |
+        * Purpose  : To tick the timer                             |
+        * Inputs   : object sender      EventArgs e                |
+        * Outputs  : Updates the timer on the UI level             |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
         public async void Timer_Tick(object sender, EventArgs e)
         {
             if (time == TimeSpan.Zero)  //If out of time
             {
                 dpt.Stop();
-                await client.ConnectClient(client.server, TIME_UP, PORT);
+                string server = IP_txt.Text;
+                string message = $"{TIME_UP} {client.gameID}";
+                await client.ConnectClient(server, message, PORT);
             }
             else
             {
@@ -157,6 +178,16 @@ namespace Client
             //Or tell us we win! :D
         }
 
+
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : restart                                       |
+        * Purpose  : To ask the user if they want to play again.   |
+        * Inputs   : NONE                                          |
+        * Outputs  : Displays a message box asking about restart.  |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
         private async Task<bool> restart()
         {
             string msg = string.Empty;
@@ -175,11 +206,11 @@ namespace Client
             switch (result)
             {
                 case MessageBoxResult.Yes:
-                    msg = YES;
+                    msg = $"{PLAY_AGAIN} {client.gameID}";
                     restart = true;
                     break;
                 case MessageBoxResult.No:
-                    msg = NO;
+                    msg = $"{EXIT} {client.gameID}";
                     restart = false;
                     break;
             }
@@ -231,6 +262,12 @@ namespace Client
             {
                 TimeError.Content = "Must be larger than 0.";
                 return false;
+            }
+
+            //===VALIDATING THE IP===//
+            if (String.IsNullOrEmpty(IP_txt.Text) || String.IsNullOrWhiteSpace(IP_txt.Text))
+            {
+                IPError.Content = "Must input an IP.";
             }
 
             return true;

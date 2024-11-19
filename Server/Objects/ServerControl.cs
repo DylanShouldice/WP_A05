@@ -181,6 +181,7 @@ namespace Server
                 {
                     responseContent = " ";
                     type = 4;
+                    currentGames.TryGetValue(int.Parse(msg[1]), out game);
                     SendMessage(user, type, game.clientId, responseContent);
                     string[] playAgain = await ReadMessage(user);
                     if (playAgain[0] == "0")
