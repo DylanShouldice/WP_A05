@@ -10,6 +10,15 @@ using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Client
 {
@@ -19,6 +28,8 @@ namespace Client
         public const string FIRST_CONNECT = "1";
         public const string GAME_MSG = "2";
         public const string EXITING_GAME = "3";
+        public const string TIME_UP = "4";
+        public const string EXIT = "6";
         //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
         public const string YES = "0";
         public const string NO = "1";
@@ -30,6 +41,8 @@ namespace Client
         public const int PORT = 13000;
 
         private Client_End client;
+        TimeSpan time;
+        DispatcherTimer dpt;
 
         public MainWindow()
         {
@@ -68,6 +81,32 @@ namespace Client
             //Updating UI to reflect string and current words remaining
             String_txt.Text = client.chars;
             NumWords_txt.Text = client.numWords;
+
+            Start_Timer();
+        }
+
+        public void Start_Timer()
+        {
+            dpt = new DispatcherTimer();
+            time = TimeSpan.FromMinutes(client.timeLimit);  //Sets time limit
+            dpt.Interval = TimeSpan.FromSeconds(1);
+            dpt.Tick += Timer_Tick; //Ticks timer on interval
+            dpt.Start();
+        }
+
+        public async void Timer_Tick(object sender, EventArgs e)
+        {
+            if (time == TimeSpan.Zero)  //If out of time
+            {
+                dpt.Stop();
+                await client.ConnectClient(client.server, TIME_UP, PORT);
+            }
+            else
+            {
+                time = time.Add(TimeSpan.FromSeconds(-1));
+                //Update timer in UI
+                Timer.Content = time.ToString("c");
+            }
         }
 
         /*
@@ -206,22 +245,26 @@ namespace Client
          */
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            string server = IP_txt.Text;    //IP address of server
-            string message = $"{EXITING_GAME} {client.gameID}"; //To send to the server
-            Int32 port;
-            int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
-
-            await client.ConnectClient(server, message, port);    //Send message and get info
-
-            if (client.exitConfirm)
+            if (Game_Cover.Visibility == Visibility.Hidden && !client.close)
             {
+                e.Cancel = true;
+                string server = IP_txt.Text;    //IP address of server
+                string message = $"{EXITING_GAME} {client.gameID}"; //To send to the server
+                Int32 port;
+                int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
+
+                await client.ConnectClient(server, message, port);    //Send message and get info
                 MessageBoxResult result = MessageBox.Show("Game in progress; Are you sure you want to exit?", "Game in Progress", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 switch (result)
                 {
                     case MessageBoxResult.Yes:
-                        await client.ConfirmClose(server, "6", port);
+                        await client.ConfirmClose(server, EXIT, port);
+                        client.close = true;
+                        this.Close();
                         break;
                     case MessageBoxResult.No:
+                        await client.ConfirmClose(server, NO, port);
+                        dpt.Start();
                         e.Cancel = true;
                         break;
                 }
