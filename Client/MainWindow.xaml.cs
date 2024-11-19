@@ -7,6 +7,10 @@
  *                    before using class level functions to send information to the server.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,6 +25,7 @@ namespace Client
         public const string GAME_MSG = "2";
         public const string EXITING_GAME = "3";
         public const string TIME_UP = "4";
+        public const string PLAY_AGAIN = "5";
         public const string EXIT = "6";
         //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
         public const string YES = "0";
@@ -66,18 +71,35 @@ namespace Client
             int.TryParse(Port_txt.Text, out port);  //Parse and assign the port
 
             await client.ConnectClient(server, message, port);    //Send message and get info
+            if (client.client != null)
+            {
+                //IF ALL INPUT IS VALID -> SWAP UI
+                Game_Cover.Visibility = Visibility.Hidden;
+                Input_Cover.Visibility = Visibility.Visible;
 
-            //IF ALL INPUT IS VALID -> SWAP UI
-            Game_Cover.Visibility = Visibility.Hidden;
-            Input_Cover.Visibility = Visibility.Visible;
+                //Updating UI to reflect string and current words remaining
+                String_txt.Text = client.chars;
+                NumWords_txt.Text = client.numWords;
 
-            //Updating UI to reflect string and current words remaining
-            String_txt.Text = client.chars;
-            NumWords_txt.Text = client.numWords;
+                ConnectError.Visibility = Visibility.Hidden;    //Hide connection error incase it was triggered previously
 
-            Start_Timer();
+                Start_Timer();
+            }
+            else
+            {
+                ConnectError.Visibility = Visibility.Visible;
+            }
         }
 
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : Start_Timer                                   |
+        * Purpose  : To start the Timer for a game.                |
+        * Inputs   : NONE                                          |
+        * Outputs  : NONE                                          |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
         public void Start_Timer()
         {
             dpt = new DispatcherTimer();
@@ -87,12 +109,23 @@ namespace Client
             dpt.Start();
         }
 
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : Timer_Tick                                    |
+        * Purpose  : To tick the timer                             |
+        * Inputs   : object sender      EventArgs e                |
+        * Outputs  : Updates the timer on the UI level             |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
         public async void Timer_Tick(object sender, EventArgs e)
         {
             if (time == TimeSpan.Zero)  //If out of time
             {
                 dpt.Stop();
-                await client.ConnectClient(client.server, TIME_UP, PORT);
+                string server = IP_txt.Text;
+                string message = $"{TIME_UP} {client.gameID}";
+                await client.ConnectClient(server, message, PORT);
             }
             else
             {
@@ -117,6 +150,14 @@ namespace Client
             //VALIDATE CONTENTS OF FIELDS HERE
             //Alphabetical letters only
             //Not empty
+            if (String.IsNullOrEmpty(Guess_txt.Text.Trim()))
+            {
+                guessError.Content = "Guess may not be empty.";
+            }
+            else if (!Regex.IsMatch(Name_txt.Text, @"^[a-zA-Z]+$"))
+            {
+                guessError.Content = "Guess must be a letter.";
+            }
 
             //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
             //PLACEHOLDER FOR TESTING
@@ -147,6 +188,16 @@ namespace Client
             //Or tell us we win! :D
         }
 
+
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : restart                                       |
+        * Purpose  : To ask the user if they want to play again.   |
+        * Inputs   : NONE                                          |
+        * Outputs  : Displays a message box asking about restart.  |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
         private async Task<bool> restart()
         {
             string msg = string.Empty;
@@ -165,11 +216,11 @@ namespace Client
             switch (result)
             {
                 case MessageBoxResult.Yes:
-                    msg = "5";
+                    msg = $"{PLAY_AGAIN} {client.gameID}";
                     restart = true;
                     break;
                 case MessageBoxResult.No:
-                    msg = "6";
+                    msg = $"{EXIT} {client.gameID}";
                     restart = false;
                     break;
             }
@@ -221,6 +272,42 @@ namespace Client
             {
                 TimeError.Content = "Must be larger than 0.";
                 return false;
+            }
+            else
+            {
+                TimeError.Content = String.Empty;
+            }
+
+            //===VALIDATING THE IP===//
+            if (String.IsNullOrEmpty(IP_txt.Text) || String.IsNullOrWhiteSpace(IP_txt.Text))
+            {
+                IPError.Content = "Must input an IP.";
+                return false;
+            }
+            if (!IPAddress.TryParse(IP_txt.Text, out IPAddress IP))
+            {
+                IPError.Content = "Input must be an IP.";
+                return false;
+            }
+            else
+            {
+                IPError.Content = String.Empty;
+            }
+
+            //===VALIDATING THE PORT===//
+            if (String.IsNullOrEmpty(Port_txt.Text.Trim()))
+            {
+                PortError.Content = "Must input a port.";
+                return false;
+            }
+            else if (!int.TryParse(Port_txt.Text, out int port))
+            {
+                PortError.Content = "Must be an integer.";
+                return false;
+            }
+            else
+            {
+                PortError.Content = String.Empty;
             }
 
             return true;

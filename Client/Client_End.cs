@@ -26,22 +26,24 @@ namespace Client
     internal class Client_End
     {
         //===SENDING CONSTANTS===//
-        public const int FIRST_CONNECT = 1;
-        public const int GAME_MSG = 2;
-        public const int EXITING_GAME = 3;
-        public const int TIME_UP = 4;
+        public const int FIRST_CONNECT  = 1;
+        public const int GAME_MSG       = 2;
+        public const int EXITING_GAME   = 3;
+        public const int TIME_UP        = 4;
+        public const int PLAY_AGAIN     = 5;
+        public const int DELETE_GAME    = 6;
         //===SENDING CONSTANTS - IN THE CASE OF EXIT CONFIRM===//
         public const int YES = 0;
         public const int NO = 1;
         //===RECEIVING CONSTANTS===//
-        public const int GAME_INFO = 1;    //Message has string & num of words
-        public const int WORD_COUNT = 2;
-        public const int SERVER_DOWN = 3;    //User won or time is up - prompt play again
-        public const int PLAY_AGAIN = 4;    //Server shut down - End game
-        public const int EXIT_CONFIRM = 5;
+        public const int GAME_INFO      = 1;    //Message has string & num of words
+        public const int WORD_COUNT     = 2;
+        public const int SERVER_DOWN    = 3;    //Server shut down
+        public const int REPLAY_PROMPT  = 4;    //User won or time is up - prompt play again
+        public const int EXIT_CONFIRM   = 5;
 
         private NetworkStream stream;
-        private TcpClient client;
+        public TcpClient client;
 
         public int gameID;
         public int timeLimit;
@@ -89,7 +91,7 @@ namespace Client
                     case WORD_COUNT:
                         numWords = parsed[2];
                         break;
-                    case PLAY_AGAIN:
+                    case REPLAY_PROMPT:
                         playAgain = true;   //Indicates to UI layer that play again screen needs to appear
                         break;
                     case SERVER_DOWN:
@@ -112,6 +114,7 @@ namespace Client
             catch (SocketException ex)
             {
                 Trace.WriteLine("SocketException: {0}", ex.ToString());
+
             }
             catch (Exception e)
             {
