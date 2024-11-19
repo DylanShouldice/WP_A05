@@ -7,20 +7,9 @@
  *                    before using class level functions to send information to the server.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Client
 {
@@ -226,14 +215,13 @@ namespace Client
 
             if (client.exitConfirm)
             {
-               MessageBoxResult result = MessageBox.Show("Game in progress; Are you sure you want to exit?", "Game in Progress", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                MessageBoxResult result = MessageBox.Show("Game in progress; Are you sure you want to exit?", "Game in Progress", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 switch (result)
                 {
                     case MessageBoxResult.Yes:
-                        await client.ConfirmClose(server, YES, port);
+                        await client.ConfirmClose(server, "6", port);
                         break;
                     case MessageBoxResult.No:
-                        await client.ConfirmClose(server, NO, port);
                         e.Cancel = true;
                         break;
                 }
