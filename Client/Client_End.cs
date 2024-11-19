@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Navigation;
 
 namespace Client
 {
@@ -53,6 +54,7 @@ namespace Client
         public bool serverdown = false;
         public bool exitConfirm = false;
         public bool timeUp = false;
+        public bool close = false;
 
 
         /*===========================================FUNCTION===========================================|

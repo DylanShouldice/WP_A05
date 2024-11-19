@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics.Eventing.Reader;
 using Client;
 using System.IO;
+using System.Windows;
 
 namespace Server
 {

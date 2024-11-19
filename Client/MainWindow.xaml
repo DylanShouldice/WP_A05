@@ -25,7 +25,7 @@
             <RowDefinition Height="10*"/>
             <RowDefinition Height="20*"/>
         </Grid.RowDefinitions>
-        <Viewbox Grid.ColumnSpan="2">
+        <Viewbox Grid.ColumnSpan="2" HorizontalAlignment="Left">
             <Border BorderBrush="Black" 
                     BorderThickness="5,5,5,5" 
                     Margin="10,10,10,18" 
@@ -59,6 +59,13 @@
                 </Label>
             </Viewbox>
         </Border>
+
+        <Viewbox VerticalAlignment="Top" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center">
+            <Label x:Name="Timer" FontWeight="Bold" 
+                   Background="{x:Null}" 
+                   Foreground="#FF6677AB" Content="0:00" FontSize="72">
+            </Label>
+        </Viewbox>
 
         <Viewbox Grid.Row="2" HorizontalAlignment="Left">
             <Label x:Name="NameLabel" 
@@ -181,10 +188,10 @@
                 BorderBrush="Black" 
                 BorderThickness="1" 
                 Grid.Column="1" 
-                Grid.Row="1" 
+                Grid.Row="2" 
                 Background="#FFACBDC9" 
                 Grid.RowSpan="11" 
-                Margin="10,0,11,0" 
+                Margin="10,0,10,0" 
                 CornerRadius="10,10,10,10">
             <Viewbox VerticalAlignment="Top">
                 <Label x:Name="label" 
@@ -226,9 +233,9 @@
         BorderBrush="Black" 
         BorderThickness="1" 
         Grid.Column="1" 
-        Grid.Row="1" 
+        Grid.Row="2" 
         Background="#99000000" 
-        Grid.RowSpan="11" 
+        Grid.RowSpan="10" 
         Margin="10,0,11,0" 
         CornerRadius="10,10,10,10"/>
 
