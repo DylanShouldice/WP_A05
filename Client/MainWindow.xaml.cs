@@ -208,7 +208,6 @@ namespace Client
             Input_Cover.Visibility = Visibility.Hidden;
             Guess_txt.Text = "";
 
-            client.gameID = 0;
             client.timeLimit = 0;
             client.chars = "";
             client.numWords = "";
