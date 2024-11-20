@@ -203,22 +203,18 @@ namespace Client
 
         public void ResetClientState()
         {
-            if (client.serverdown)
-            {
-                // Reset UI elements
-                Game_Cover.Visibility = Visibility.Visible;
-                Input_Cover.Visibility = Visibility.Hidden;
-                Guess_txt.Text = "";
-                // ... reset other UI elements as needed ...
+            // Reset UI elements
+            Game_Cover.Visibility = Visibility.Visible;
+            Input_Cover.Visibility = Visibility.Hidden;
+            Guess_txt.Text = "";
 
-                // Reset game variables (you might need to access these through client)
-                client.gameID = 0;
-                client.timeLimit = 0;
-                client.chars = "";
-                client.numWords = "";
-                // ... reset other game variables as needed ...
-                client.serverdown = false;
-            }
+            client.gameID = 0;
+            client.timeLimit = 0;
+            client.chars = "";
+            client.numWords = "";
+            client.serverdown = false;
+            client.playAgain = false;
+            client.timeUp = false;
         }
 
 
@@ -254,6 +250,7 @@ namespace Client
                     break;
                 case MessageBoxResult.No:
                     msg = $"{EXIT} {client.gameID}";
+                    ResetClientState(); // my attempt at reseting the client side. 
                     restart = false;
                     break;
             }
@@ -380,7 +377,7 @@ namespace Client
                         this.Close();
                         break;
                     case MessageBoxResult.No:
-                        await client.ConfirmClose(server, NO, port);
+                        await client.ConfirmClose(server, 0.ToString(), port);
                         dpt.Start();
                         e.Cancel = true;
                         break;

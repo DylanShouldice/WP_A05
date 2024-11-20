@@ -11,7 +11,6 @@ using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Client
 {
@@ -94,11 +93,6 @@ namespace Client
                         break;
                     case REPLAY_PROMPT:
                         playAgain = true;   //Indicates to UI layer that play again screen needs to appear
-                        break;
-                    case SERVER_DOWN:
-                        MessageBox.Show("Server is shutting down.", "Shutdown", MessageBoxButton.OK, MessageBoxImage.Information);
-                        await ConfirmClose(server, YES.ToString(), port); // Send confirmation to server
-                        serverdown = true;
                         break;
                     case EXIT_CONFIRM:
                         exitConfirm = true;
