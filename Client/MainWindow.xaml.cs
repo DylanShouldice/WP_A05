@@ -187,7 +187,10 @@ namespace Client
                     Game_Cover.Visibility = Visibility.Hidden;
                     Input_Cover.Visibility = Visibility.Visible;
                     MessageBoxResult result = MessageBox.Show("Server is shutting down", "Server Closing", MessageBoxButton.OK, MessageBoxImage.Question);
-                    await client.ConnectClient(server, "6", port);
+                    await client.ConnectClient(server, $"{6} {client.gameID}", port);
+
+
+                    Application.Current.Shutdown();
                 }
                 else
                 {

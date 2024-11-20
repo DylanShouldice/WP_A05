@@ -11,8 +11,8 @@ namespace Server
     {
         public TcpClient client;
         public readonly string gameDataDirectory;
-        public string currentWordPool = "aaaaaaaaaaaaaaa";
-        public int remainingWords = 20;
+        public string currentWordPool;
+        public int remainingWords;
         public List<string> wordsToGuess;
         public int clientId;
         public string clientName;
