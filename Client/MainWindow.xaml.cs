@@ -264,8 +264,15 @@ namespace Client
             String_txt.Text = client.chars;
             NumWords_txt.Text = client.numWords;
             //===Restart Timer===//
-            time = TimeSpan.FromMinutes(client.timeLimit);  //Sets time limit
-            dpt.Start();
+            if (restart == true)
+            {
+                time = TimeSpan.FromMinutes(client.timeLimit);  //Sets time limit
+                dpt.Start();
+            }
+            else
+            {
+                dpt.Stop();
+            }
             //===Reset State Bools===//
             client.playAgain = false;
             Guess_txt.Text = string.Empty;
