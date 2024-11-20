@@ -122,7 +122,7 @@ namespace Client
         */
         public async void Timer_Tick(object sender, EventArgs e)
         {
-            if (time == TimeSpan.Zero)  //If out of time
+            if (time == TimeSpan.Zero && Game_Cover.Visibility == Visibility.Hidden)  //If out of time and in game
             {
                 client.timeUp = true;
                 dpt.Stop();
@@ -203,11 +203,6 @@ namespace Client
                     NumWords_txt.Text = client.numWords;
                 }
             }
-
-            //DO STUFF WITH MESSAGE HERE//
-            //Realistically should only update number of guesses left
-            //Or tell us server shut down :(
-            //Or tell us we win! :D
         }
 
         public void ResetClientState()
