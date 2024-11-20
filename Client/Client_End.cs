@@ -97,6 +97,9 @@ namespace Client
                     case EXIT_CONFIRM:
                         exitConfirm = true;
                         break;
+                    case SERVER_DOWN:
+                        serverdown = true;
+                        break;
 
                 }
 

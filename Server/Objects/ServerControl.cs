@@ -18,7 +18,7 @@ namespace Server
         private readonly ConcurrentQueue<TcpClient> connectionQueue = new ConcurrentQueue<TcpClient>();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly Logger logger;
-        private bool isShuttingDown = false;
+        private volatile bool isShuttingDown = false;
         private string gameDir;
         private int clientsConnected;
         private int totalUsers;
@@ -65,7 +65,7 @@ namespace Server
             logger.Log("SERVER STARTED");
             logger.Log($"Waiting for clients");
 
-            while (!cts.IsCancellationRequested)
+            while (!isShuttingDown)
             {
                 try
                 {
@@ -86,7 +86,7 @@ namespace Server
 
         internal void AcceptConnections()
         {
-            while (!cts.IsCancellationRequested)
+            while (!isShuttingDown)
             {
                 TcpClient newClient = new TcpClient();
                 if (connectionQueue.TryDequeue(out newClient))
@@ -107,7 +107,8 @@ namespace Server
             {
                 if (Console.ReadKey(true).Key == ConsoleKey.C) // Check for 'c' key press
                 {
-
+                    logger.Log($"Server Shutdown Initiated");
+                    cts.Cancel();
                 }
             }
         }
@@ -128,15 +129,23 @@ namespace Server
                 int respType = 0;
                 int reqType = int.Parse(msg[0]);
 
-                if (reqType == FIRST_CONNECT)
+                if (reqType == FIRST_CONNECT && !cts.IsCancellationRequested)
                 {
                     HandleFirstConnect(user, out game, out responseContent, out respType, msg);
                 }
                 else
                 {
                     currentGames.TryGetValue(int.Parse(msg[1]), out game);
-                    logger.Log($"Client {{ {game.clientId} }} reconnected");
-                    HandleSubsuqentRequests(user, reqType, msg, game, out responseContent, out respType);
+                    if (!cts.IsCancellationRequested)
+                    {
+                        logger.Log($"Client {{ {game.clientId} }} reconnected");
+                        HandleSubsuqentRequests(user, reqType, msg, game, out responseContent, out respType);
+                    }
+                    else
+                    {
+                        responseContent = string.Empty;
+                        respType = DENY;
+                    }
                 }
 
                 SendMessage(user, respType, game.clientId, responseContent);
