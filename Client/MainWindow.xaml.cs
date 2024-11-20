@@ -43,6 +43,11 @@ namespace Client
         {
             InitializeComponent();
             client = new Client_End();
+
+            //Initializing time to be used later
+            dpt = new DispatcherTimer();
+            dpt.Interval = TimeSpan.FromSeconds(1);
+            dpt.Tick += Timer_Tick; //Ticks timer on interval
         }
 
         /*
@@ -133,6 +138,7 @@ namespace Client
             {
                 time = time.Add(TimeSpan.FromSeconds(-1));
                 //Update timer in UI
+                client.timeUp = false;
                 gameTimer.Content = time.ToString("c");
             }
         }
@@ -168,7 +174,7 @@ namespace Client
             //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
             //PLACEHOLDER FOR TESTING
             string server = IP_txt.Text;
-            string message = GAME_MSG + " " + client.gameID + " " + Guess_txt.Text; //Combine indicator with the guess
+            string message = GAME_MSG + " " + client.gameID + " " + Guess_txt.Text.ToLower(); //Combine indicator with the guess
             Int32 port;
             if (int.TryParse(Port_txt.Text, out port)) //Parse and assign the port
             {
@@ -231,6 +237,7 @@ namespace Client
         */
         private async Task<bool> restart()
         {
+            dpt.Stop();
             string msg = string.Empty;
             bool restart = false;
 
@@ -257,10 +264,14 @@ namespace Client
                     break;
             }
 
+            //===Reset UI and Talk to Server===//
             await client.ConnectClient(IP_txt.Text, msg, PORT);
             String_txt.Text = client.chars;
             NumWords_txt.Text = client.numWords;
-            Start_Timer();
+            //===Restart Timer===//
+            time = TimeSpan.FromMinutes(client.timeLimit);  //Sets time limit
+            dpt.Start();
+            //===Reset State Bools===//
             client.playAgain = false;
             Guess_txt.Text = string.Empty;
             return restart;
@@ -380,7 +391,6 @@ namespace Client
                         break;
                     case MessageBoxResult.No:
                         await client.ConfirmClose(server, 0.ToString(), port);
-                        dpt.Start();
                         e.Cancel = true;
                         break;
                 }
