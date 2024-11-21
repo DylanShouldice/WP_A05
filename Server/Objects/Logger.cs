@@ -1,9 +1,14 @@
-﻿using System;
+﻿/*
+ * Author : Dylan Shouldice-Jacobs
+ * Purpose: To help debug the 2 project application, simply has a queue that gets added to when an instantiated Logger object Log() is invoked
+ *          Which will be checked by another method that handles stuff in queue
+ */
+
+
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +22,7 @@ namespace Server
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
 
-        public Logger ()
+        public Logger()
         {
             if (!Directory.Exists("Logs"))
             {
@@ -31,13 +36,23 @@ namespace Server
             Task.Run(() => ProcessMessageQueue());
         }
 
+        /*
+        *  Input   : path to look in, and the file name to look for
+        *  Process : Looks for files inside of a dir and returns the amount with a certian name
+        *  Output  : num of files with name
+        */
         public static int CountFilesWithName(string directoryPath, string partialFileName)
         {
             return Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories)
                            .Count(f => Path.GetFileName(f).StartsWith(partialFileName));
         }
 
-        public void Log (string message)
+        /*
+        *  Input   : message to be added to queue
+        *  Process : adds a new message to queue
+        *  Output  : NONE
+        */
+        public void Log(string message)
         {
             logQueue.Enqueue($"{DateTime.Now} - {message}");
         }
@@ -47,6 +62,11 @@ namespace Server
             cts.Cancel();
         }
 
+        /*
+        *  Input   : NONE
+        *  Process : Adds messages in queue to the log file and the console
+        *  Output  : NONE
+        */
         public void ProcessMessageQueue()
         {
             while (!cts.IsCancellationRequested)

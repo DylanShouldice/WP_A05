@@ -7,10 +7,7 @@
  *                    before using class level functions to send information to the server.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -46,6 +43,11 @@ namespace Client
         {
             InitializeComponent();
             client = new Client_End();
+
+            //Initializing time to be used later
+            dpt = new DispatcherTimer();
+            dpt.Interval = TimeSpan.FromSeconds(1);
+            dpt.Tick += Timer_Tick; //Ticks timer on interval
         }
 
         /*
@@ -120,17 +122,23 @@ namespace Client
         */
         public async void Timer_Tick(object sender, EventArgs e)
         {
-            if (time == TimeSpan.Zero)  //If out of time
+            if (time == TimeSpan.Zero && Game_Cover.Visibility == Visibility.Hidden)  //If out of time and in game
             {
+                client.timeUp = true;
                 dpt.Stop();
                 string server = IP_txt.Text;
                 string message = $"{TIME_UP} {client.gameID}";
                 await client.ConnectClient(server, message, PORT);
+                if (client.playAgain)
+                {
+                    await restart();
+                }
             }
             else
             {
                 time = time.Add(TimeSpan.FromSeconds(-1));
                 //Update timer in UI
+                client.timeUp = false;
                 gameTimer.Content = time.ToString("c");
             }
         }
@@ -158,11 +166,15 @@ namespace Client
             {
                 guessError.Content = "Guess must be a letter.";
             }
+            else
+            {
+                guessError.Content = string.Empty;
+            }
 
             //PLACEHOLDER FOR TESTING - Will be same information as was sent in start_btn_Click (Other than message)
             //PLACEHOLDER FOR TESTING
             string server = IP_txt.Text;
-            string message = GAME_MSG + " " + client.gameID + " " + Guess_txt.Text; //Combine indicator with the guess
+            string message = GAME_MSG + " " + client.gameID + " " + Guess_txt.Text.ToLower(); //Combine indicator with the guess
             Int32 port;
             if (int.TryParse(Port_txt.Text, out port)) //Parse and assign the port
             {
@@ -176,16 +188,48 @@ namespace Client
                         Input_Cover.Visibility = Visibility.Hidden;
                     }
                 }
+                else if (client.serverdown)
+                {
+                    MessageBoxResult result = MessageBox.Show("Server is shutting down", "Server Closing", MessageBoxButton.OK, MessageBoxImage.Question);
+                    ResetClientState();
+                    //client.SendMessage(client.client, "ree");
+                }
                 else
                 {
                     NumWords_txt.Text = client.numWords;
                 }
             }
+        }
 
-            //DO STUFF WITH MESSAGE HERE//
-            //Realistically should only update number of guesses left
-            //Or tell us server shut down :(
-            //Or tell us we win! :D
+
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : ResetClientState                              |
+        * Purpose  : Reset the users view of the client            |
+        * Inputs   : NONE                                          |
+        * Outputs  : Displays a message box asking about restart.  |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
+        public void ResetClientState()
+        {
+            // Reset UI elements
+            Game_Cover.Visibility = Visibility.Visible;
+            Input_Cover.Visibility = Visibility.Hidden;
+            Guess_txt.Text = string.Empty;
+            NumWords_txt.Text = string.Empty;
+            String_txt.Text = string.Empty;
+            gameTimer.Content = "0:00";
+            Guess_txt.Text = "";
+            guessError.Content = "";
+            client.timeLimit = 0;
+            client.chars = "";
+            client.numWords = "";
+            client.serverdown = false;
+            client.playAgain = false;
+            client.timeUp = false;
+
+            dpt.Stop();
         }
 
 
@@ -200,6 +244,7 @@ namespace Client
         */
         private async Task<bool> restart()
         {
+            dpt.Stop();
             string msg = string.Empty;
             bool restart = false;
 
@@ -221,12 +266,28 @@ namespace Client
                     break;
                 case MessageBoxResult.No:
                     msg = $"{EXIT} {client.gameID}";
+                    ResetClientState(); // my attempt at reseting the client side. 
                     restart = false;
                     break;
             }
 
+            //===Reset UI and Talk to Server===//
             await client.ConnectClient(IP_txt.Text, msg, PORT);
+            String_txt.Text = client.chars;
+            NumWords_txt.Text = client.numWords;
+            //===Restart Timer===//
+            if (restart == true)
+            {
+                time = TimeSpan.FromMinutes(client.timeLimit);  //Sets time limit
+                dpt.Start();
+            }
+            else
+            {
+                dpt.Stop();
+            }
+            //===Reset State Bools===//
             client.playAgain = false;
+            Guess_txt.Text = string.Empty;
             return restart;
         }
 
@@ -343,8 +404,7 @@ namespace Client
                         this.Close();
                         break;
                     case MessageBoxResult.No:
-                        await client.ConfirmClose(server, NO, port);
-                        dpt.Start();
+                        await client.ConfirmClose(server, 0.ToString(), port);
                         e.Cancel = true;
                         break;
                 }
