@@ -190,13 +190,9 @@ namespace Client
                 }
                 else if (client.serverdown)
                 {
-                    Game_Cover.Visibility = Visibility.Hidden;
-                    Input_Cover.Visibility = Visibility.Visible;
                     MessageBoxResult result = MessageBox.Show("Server is shutting down", "Server Closing", MessageBoxButton.OK, MessageBoxImage.Question);
-                    await client.ConnectClient(server, $"{6} {client.gameID}", port);
-
-
-                    Application.Current.Shutdown();
+                    ResetClientState();
+                    //client.SendMessage(client.client, "ree");
                 }
                 else
                 {
@@ -205,19 +201,35 @@ namespace Client
             }
         }
 
+
+        /*
+        * ===================FUNCTION==============================|
+        * Name     : ResetClientState                              |
+        * Purpose  : Reset the users view of the client            |
+        * Inputs   : NONE                                          |
+        * Outputs  : Displays a message box asking about restart.  |
+        * Returns  : NONE                                          |
+        * =========================================================|
+        */
         public void ResetClientState()
         {
             // Reset UI elements
             Game_Cover.Visibility = Visibility.Visible;
             Input_Cover.Visibility = Visibility.Hidden;
+            Guess_txt.Text = string.Empty;
+            NumWords_txt.Text = string.Empty;
+            String_txt.Text = string.Empty;
+            gameTimer.Content = "0:00";
             Guess_txt.Text = "";
-
+            guessError.Content = "";
             client.timeLimit = 0;
             client.chars = "";
             client.numWords = "";
             client.serverdown = false;
             client.playAgain = false;
             client.timeUp = false;
+
+            dpt.Stop();
         }
 
 

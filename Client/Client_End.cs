@@ -71,6 +71,7 @@ namespace Client
             try
             {
                 //==SENDING/RETREIVING DATA===//
+                client = null;
                 client = new TcpClient(server, port);
                 stream = client.GetStream();
 
@@ -99,6 +100,8 @@ namespace Client
                         break;
                     case SERVER_DOWN:
                         serverdown = true;
+                        break;
+                    default:
                         break;
 
                 }
