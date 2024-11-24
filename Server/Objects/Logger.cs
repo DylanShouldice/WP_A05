@@ -7,8 +7,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Configuration;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +16,6 @@ namespace Server
 {
     internal class Logger
     {
-        private string logDir = string.Empty;
         private string logFile = string.Empty;
         private readonly ConcurrentQueue<string> logQueue = new ConcurrentQueue<string>();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
@@ -24,27 +23,9 @@ namespace Server
 
         public Logger()
         {
-            if (!Directory.Exists("Logs"))
-            {
-                Directory.CreateDirectory("Logs");
-
-            }
-            this.logDir = "Logs";
-            string numOfLogs = CountFilesWithName(logDir, "serverLog").ToString();
-            this.logFile = "serverLog_" + numOfLogs;
+            this.logFile = ConfigurationSettings.AppSettings["LogFilePath"];
 
             Task.Run(() => ProcessMessageQueue());
-        }
-
-        /*
-        *  Input   : path to look in, and the file name to look for
-        *  Process : Looks for files inside of a dir and returns the amount with a certian name
-        *  Output  : num of files with name
-        */
-        public static int CountFilesWithName(string directoryPath, string partialFileName)
-        {
-            return Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories)
-                           .Count(f => Path.GetFileName(f).StartsWith(partialFileName));
         }
 
         /*
@@ -76,7 +57,7 @@ namespace Server
                     if (logQueue.TryDequeue(out string message))
                     {
                         Console.WriteLine(message);
-                        File.AppendAllText(logDir + "/" + logFile, message + "\n");
+                        File.AppendAllText(logFile + ".txt", message + "\n");
                     }
                     else
                     {
