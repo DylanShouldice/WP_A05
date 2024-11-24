@@ -233,7 +233,7 @@ namespace Server
             return logString.Split(' ');
         }
 
-        protected override void OnStart(string[] args)
+        protected async override void OnStart(string[] args)
         {
             logger.Log("SERVER STARTED");
         }
@@ -244,12 +244,21 @@ namespace Server
             cts.Cancel();
             while (totalUsers > 0)
             {
+            //Log here
+            string hostIp = ChooseIp();
+            int port = 13000;
 
-            }
-            logger.Log("SERVER STOPPED");
+            Console.Clear();
+            Console.WriteLine(hostIp);
+            ServerControl server = new ServerControl(hostIp, port);
+            await server.StartServer();
         }
 
-        static string GetIp()
+        protected override void OnStop()
+        {
+        }
+
+        static string ChooseIp()
         {
             List<IPAddress> validIps = new List<IPAddress>();
             foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
