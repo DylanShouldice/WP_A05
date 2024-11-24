@@ -1,11 +1,4 @@
-﻿/*
- * Author : Dylan Shouldice-Jacobs
- * Purpose: The purpose of this class is to house the neccesarry methods to control the server and handle requests from clients.
- * 
- */
-
-
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -29,9 +22,10 @@ namespace Server
         private readonly Logger logger;
         private volatile bool isShuttingDown = false;
         private string gameDir;
-        private int clientsConnected = 1;
+        private int clientsConnected;
         private int totalUsers;
 
+        // Communcation
 
         // RESPONSE
 
@@ -53,8 +47,6 @@ namespace Server
 
 
 
-
-
         public ServerControl(string ip, int port)
         {
             Directory.CreateDirectory("gameDir");
@@ -64,11 +56,7 @@ namespace Server
         }
 
 
-        /*
-        *  Input   : NONE
-        *  Process : Starts the threads needed for the server to work, and then waits for connections and adds them to a queue, so we can have multiple requests.
-        *  Output  : Request being added to queue
-        */
+
         public async Task StartServer() // Start server, accept clients
         {
             listener.Start();
@@ -92,18 +80,12 @@ namespace Server
                 }
                 catch (Exception e)
                 {
-                    logger.Log($"Exception caught -- ServerControl.StopServer() -- {e}");
+                    logger.Log($"Exception caught -- ServerControl.StopServer() -- {e.Message}");
                 }
             }
         }
 
 
-        /*
-        *  Input   : NONE
-        *  Process : Checks if the queue has any messages pending, if so it creates a task to handle the request.
-        *            It only stops waiting for connections after the last client connects. - Because the 
-        *  Output  : Tasks to handle clients
-        */
         internal void AcceptConnections()
         {
             while (!isShuttingDown)
@@ -121,12 +103,6 @@ namespace Server
         }
 
 
-        /*
-        *  Input   : NONE
-        *  Process : Gets started at server runtime. Waits for someone on the host computer to press 'c' in the console where the server is running
-        *            if this happens it will trigger the server stop gracefully
-        *  Output  : NONE
-        */
         private async void MonitorServerStopInput()
         {
             while (!cts.IsCancellationRequested)
@@ -136,38 +112,13 @@ namespace Server
                     cts.Cancel();
                 }
             }
-            while (totalUsers > 0)
-            {
-                logger.Log($"Total Users {totalUsers}");
-                Thread.Sleep(100);
-            }
-
-            isShuttingDown = true;
-            listener.Stop();
-            logger.Stop();
-            currentGames.Clear();
         }
-
-
-
-
         /* ---------- CLIENT HANDLING ---------- */
-
-        /*
-        *  Input   : TcpClient - user - client with request that needs processing
-        *            CancelToken - cToken - is canceled when host presses. Which will not allow messages to be processed normally. 
-        *            Instead all responses will be of type DENY
-        *  Process : Checks the message type then sends it to a function to be handled. Either to FirstConnection, or SubsuqentConnection. 
-        *            Unless the cToken is cancelled
-        *  Output  : Appropriate response fo the clients request
-        */
         private async Task HandleClient(TcpClient user, CancellationToken cToken)
         {
             Game game = null;
             try
             {
-                logger.Log($"Total Users {totalUsers}");
-
                 string responseContent = string.Empty;
                 string[] msg = await ReadMessage(user);
                 int respType = 0;
@@ -175,65 +126,46 @@ namespace Server
 
                 if (reqType == FIRST_CONNECT && !cts.IsCancellationRequested)
                 {
-                    totalUsers++;
-                    HandleFirstConnect(out game, out responseContent, out respType, msg);
+                    HandleFirstConnect(user, out game, out responseContent, out respType, msg);
                 }
                 else
                 {
                     currentGames.TryGetValue(int.Parse(msg[1]), out game);
                     if (!cts.IsCancellationRequested)
                     {
-                        logger.Log($"Client {{ {game.clientId} }} reconnected. Total {{ {totalUsers} }}");
-                        HandleSubsuqentRequests(reqType, msg, game, out responseContent, out respType);
+                        logger.Log($"Client {{ {game.clientId} }} reconnected");
+                        HandleSubsuqentRequests(user, reqType, msg, game, out responseContent, out respType);
+                    }
+                    else
+                    {
+                        responseContent = string.Empty;
+                        respType = DENY;
                     }
                 }
 
-                if (!cts.IsCancellationRequested)
-                {
-                    SendMessage(user, respType, game.clientId, responseContent);
-                }
-                else
-                {
-                    responseContent = string.Empty;
-                    respType = DENY;
-                    SendMessage(user, respType, int.Parse(msg[1]), responseContent);
-                    await ReadMessage(user);
-                    currentGames.TryRemove(int.Parse(msg[1]), out _);
-                    totalUsers--;
-                }
-            }
-            catch (IOException)
-            {
-                logger.Log($"Client Disconnected Total {{ {totalUsers} }}");
+                SendMessage(user, respType, game.clientId, responseContent);
             }
             catch (Exception e)
             {
-                logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e.Message}");
+                logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e}");
             }
             finally
             {
-                CloseConnection(user);
+                CloseConnection(game);
             }
         }
-        /*
-        *  Input   : Game - user - game to be closed
-        *  Process : Closes an open connection
-        *  Output  : NONE
-        */
-        private void CloseConnection(TcpClient user)
+
+        private void CloseConnection(Game user)
         {
-            logger.Log($"Client connection closed");
-            user.Close();
+            logger.Log($"Client {{ {user.clientId} }} connection closed");
+            user.client.Close();
         }
-        /*
-        *  Input   : takes in the msg, and the variables it needs to send output to. as well as a game to use game.Play()
-        *  Process : Completes request sent by clients after their first connection
-        *  Output  : The response message into the variables with 'out'
-        */
-        private void HandleSubsuqentRequests(int reqType, string[] msg, Game game, out string responseContent, out int respType)
+
+        private void HandleSubsuqentRequests(TcpClient user, int reqType, string[] msg, Game game, out string responseContent, out int respType)
         {
             responseContent = string.Empty;
             respType = 0;
+            game.client = user;
 
             switch (reqType)
             {
@@ -250,54 +182,30 @@ namespace Server
                     break;
                 case CLIENT_LOVES_GAME:
                     game.InitalizeGame();
-                    if (game.prevWordPool == game.currentWordPool)
-                    {
-                        game.InitalizeGame();
-                    }
-                    game.prevWordPool = game.currentWordPool;
                     respType = STRING_AND_WORD_COUNT;
                     responseContent = $"{game.currentWordPool} {game.remainingWords}";
                     break;
                 case BYE_CLIENT:
                     currentGames.TryRemove(int.Parse(msg[1]), out _);
-                    totalUsers--;
                     break;
             }
         }
 
-        /*
-        *  Input   : Game - game - game object to be created
-        *            then the rest is the response that is built.
-        *  Process : Goes through the process of creating or refreshing a game object
-        *  Output  : a new Game and the message to be sent
-        */
-        private void HandleFirstConnect(out Game game, out string responseContent, out int respType, string[] msg)
+
+        private void HandleFirstConnect(TcpClient user, out Game game, out string responseContent, out int respType, string[] msg)
         {
-            game = new Game(gameDir, GenerateId(msg[1]));
+            game = new Game(user, gameDir, GenerateId(msg[1]));
             logger.Log($"New game made name: {msg[1]}");
             game.InitalizeGame();
-            if (game.prevWordPool == game.currentWordPool)
-            {
-                game.InitalizeGame();
-            }
-            game.prevWordPool = game.currentWordPool;
             game.clientName = msg[1];
             responseContent = $"{game.currentWordPool} {game.remainingWords}";
             currentGames.TryAdd(game.clientId, game);
             respType = STRING_AND_WORD_COUNT;
         }
 
-        /*
-        *  Input   : string - nameToHash - username that will be turned into ID
-        *  Process : turns string into hash for hashTable
-        *  Output  : new Id
-        */
+
         private int GenerateId(string nameToHash)
         {
-            if (currentGames.ContainsKey(nameToHash.GetHashCode() % 256))
-            {
-                nameToHash = Guid.NewGuid().ToString();
-            }
             return (nameToHash.GetHashCode() % 256); // Ensures it will not take up more then 1 character
         }
 
@@ -305,11 +213,7 @@ namespace Server
 
         /* ---------- SEND / RECIEVE ---------- */
 
-        /*
-        *  Input   : client to be sent to, and the message
-        *  Process : Sends message to client
-        *  Output  : NONE
-        */
+
         public void SendMessage(TcpClient client, int respType, int clientId, string content)
         {
             string toSend = $"{respType} {clientId} {content}";
@@ -318,11 +222,7 @@ namespace Server
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        /*
-         *  Input   : client to read from
-         *  Process : Reads a message 
-         *  Output  : parsed message in string[]
-         */
+
         public async Task<string[]> ReadMessage(TcpClient client)
         {
             Byte[] buffer = new Byte[1024];
@@ -333,7 +233,7 @@ namespace Server
             return logString.Split(' ');
         }
 
-        protected async override void OnStart(string[] args)
+        protected override void OnStart(string[] args)
         {
             logger.Log("SERVER STARTED");
         }
@@ -344,21 +244,12 @@ namespace Server
             cts.Cancel();
             while (totalUsers > 0)
             {
-            //Log here
-            string hostIp = ChooseIp();
-            int port = 13000;
 
-            Console.Clear();
-            Console.WriteLine(hostIp);
-            ServerControl server = new ServerControl(hostIp, port);
-            await server.StartServer();
+            }
+            logger.Log("SERVER STOPPED");
         }
 
-        protected override void OnStop()
-        {
-        }
-
-        static string ChooseIp()
+        static string GetIp()
         {
             List<IPAddress> validIps = new List<IPAddress>();
             foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
