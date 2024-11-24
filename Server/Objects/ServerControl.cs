@@ -234,12 +234,7 @@ namespace Server
             return logString.Split(' ');
         }
 
-        protected override void OnStart(string[] args)
-        {
-            //Log here
-        }
-
-        protected async override void OnStop()
+        protected async override void OnStart(string[] args)
         {
             //Log here
             string hostIp = ChooseIp();
@@ -249,6 +244,10 @@ namespace Server
             Console.WriteLine(hostIp);
             ServerControl server = new ServerControl(hostIp, port);
             await server.StartServer();
+        }
+
+        protected override void OnStop()
+        {
         }
 
         static string ChooseIp()
