@@ -190,8 +190,8 @@ namespace Client
                 }
                 else if (client.serverdown)
                 {
-                    Game_Cover.Visibility = Visibility.Hidden;
-                    Input_Cover.Visibility = Visibility.Visible;
+                    Game_Cover.Visibility = Visibility.Visible;
+                    Input_Cover.Visibility = Visibility.Hidden;
                     MessageBoxResult result = MessageBox.Show("Server is shutting down", "Server Closing", MessageBoxButton.OK, MessageBoxImage.Question);
                     await client.ConnectClient(server, $"{6} {client.gameID}", port);
 

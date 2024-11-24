@@ -100,6 +100,8 @@ namespace Client
                     case SERVER_DOWN:
                         serverdown = true;
                         break;
+                    default:
+                        break;
 
                 }
 
