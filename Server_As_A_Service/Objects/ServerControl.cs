@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -49,6 +48,7 @@ namespace Server
 
         public ServerControl(string ip, int port)
         {
+            InitalizeComponent();
             Directory.CreateDirectory("gameDir");
             this.gameDir = "gameDir";
             listener = new TcpListener(IPAddress.Parse(ip), port);
@@ -249,26 +249,7 @@ namespace Server
             logger.Log("SERVER STOPPED");
         }
 
-        static string GetIp()
-        {
-            List<IPAddress> validIps = new List<IPAddress>();
-            foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    validIps.Add(ip);
-                }
-            }
 
-            if (validIps.Count == 0)
-            {
-                Console.WriteLine("No valid IP addresses found.");
-                return string.Empty;
-            }
-
-            string chosenIp = validIps[validIps.Count].ToString();
-            return chosenIp;
-        }
 
     }
 }
