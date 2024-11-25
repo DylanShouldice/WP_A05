@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 
 
-namespace Server
+namespace Server_As_A_Service
 {
     internal class Game
     {

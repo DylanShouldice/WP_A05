@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Server_As_A_Service
 {
 
 
@@ -44,11 +44,12 @@ namespace Server
         public const int CLIENT_LOVES_GAME = 5;
         public const int BYE_CLIENT = 6;
 
+        Thread t;
+
 
 
         public ServerControl(string ip, int port)
         {
-            InitalizeComponent();
             Directory.CreateDirectory("gameDir");
             this.gameDir = "gameDir";
             listener = new TcpListener(IPAddress.Parse(ip), port);
@@ -235,7 +236,7 @@ namespace Server
 
         protected override void OnStart(string[] args)
         {
-            logger.Log("SERVER STARTED");
+            t.Start();
         }
 
         protected async override void OnStop()
@@ -248,8 +249,5 @@ namespace Server
             }
             logger.Log("SERVER STOPPED");
         }
-
-
-
     }
 }
