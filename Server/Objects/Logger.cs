@@ -4,14 +4,6 @@
  *          Which will be checked by another method that handles stuff in queue
  */
 
-
-using System;
-using System.Collections.Concurrent;
-using System.Configuration;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Server
 {
     internal class Logger
@@ -57,7 +49,7 @@ namespace Server
                     if (logQueue.TryDequeue(out string message))
                     {
                         Console.WriteLine(message);
-                        File.AppendAllText(logFile + ".txt", message + "\n");
+                        File.AppendAllText(logFile, message + "\n");
                     }
                     else
                     {
