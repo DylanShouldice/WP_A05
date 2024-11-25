@@ -16,7 +16,7 @@ namespace Server_As_A_Service
             InitializeComponent();
         }
 
-        private void ServerProcessInstaller_AfterInstall(object sender, InstallEventArgs e)
+        private void serviceInstaller1_AfterInstall(object sender, InstallEventArgs e)
         {
 
         }

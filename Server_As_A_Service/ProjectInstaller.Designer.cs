@@ -36,13 +36,13 @@
             this.ServerProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalService;
             this.ServerProcessInstaller.Password = null;
             this.ServerProcessInstaller.Username = null;
-            this.ServerProcessInstaller.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.ServerProcessInstaller_AfterInstall);
             // 
             // ServerInstaller
             // 
-            this.ServerInstaller.Description = "This service starts the server for the word guessing game";
-            this.ServerInstaller.DisplayName = "ServerService";
+            this.ServerInstaller.Description = "Starts the server for the word guessing game";
+            this.ServerInstaller.DisplayName = "ServerControl";
             this.ServerInstaller.ServiceName = "ServerControl";
+            this.ServerInstaller.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.serviceInstaller1_AfterInstall);
             // 
             // ProjectInstaller
             // 

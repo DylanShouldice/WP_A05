@@ -52,7 +52,7 @@ namespace Server_As_A_Service
         {
             Directory.CreateDirectory("gameDir");
             this.gameDir = "gameDir";
-            listener = new TcpListener(IPAddress.Parse(ip), port);
+            //listener = new TcpListener(IPAddress.Parse(ip), port); --I think is causing exception
             logger = new Logger();
         }
 
@@ -248,6 +248,15 @@ namespace Server_As_A_Service
 
             }
             logger.Log("SERVER STOPPED");
+        }
+
+        private void InitializeComponent()
+        {
+            // 
+            // ServerControl
+            // 
+            this.ServiceName = "ServerControl";
+
         }
     }
 }
