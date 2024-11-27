@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -53,7 +54,7 @@ namespace Server
 
         public ServerControl(string ip, int port)
         {
-            this.gameDir = "C:\\Temp\\gameDir";
+            this.gameDir = ConfigurationSettings.AppSettings["GameFilePath"];
             Directory.CreateDirectory(gameDir);
             listener = new TcpListener(IPAddress.Parse(ip), port);
         }

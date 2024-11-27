@@ -7,6 +7,7 @@
  */
 using Server;
 using System;
+using System.Configuration;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 
@@ -46,8 +47,8 @@ namespace ServerService
                     Logger.InitalizeLogger();
                     Logger.Log("Starting Server.");
 
-                    string ipAddress = ServerControl.ChooseIp();
-                    int port = 13000;
+                    string ipAddress = ConfigurationSettings.AppSettings["IP"];
+                    int port = int.Parse(ConfigurationSettings.AppSettings["Port"]);
                     Logger.Log($"Initializing ServerControl with IP: {ipAddress}, Port: {port}");
                     server = new ServerControl(ipAddress, port);
                     server.StartServer().Wait();
@@ -59,7 +60,7 @@ namespace ServerService
                 }
             });
         }
-
+        
         /*=====================FUNCTION=================================|
          * Name     : OnStop                                            |
          * Purpose  : To stop our server when the service is stopped.   |
