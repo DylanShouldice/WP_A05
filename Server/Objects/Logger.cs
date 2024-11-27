@@ -8,7 +8,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Configuration;
-using System.IO;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,9 +21,14 @@ namespace Server
         private static readonly CancellationTokenSource cts = new CancellationTokenSource();
 
 
+
         public static void InitalizeLogger()
         {
             logFile = ConfigurationSettings.AppSettings["LogFilePath"];
+            if (!EventLog.SourceExists("WP_Server_Service"))
+            {
+                EventLog.CreateEventSource("WP_Server_Service", "WP_ServerLog");
+            }
 
             Task.Run(() => ProcessMessageQueue());
         }
@@ -50,14 +55,14 @@ namespace Server
         */
         public static void ProcessMessageQueue()
         {
+
             while (!cts.IsCancellationRequested)
             {
                 try
                 {
                     if (logQueue.TryDequeue(out string message))
                     {
-                        Console.WriteLine(message);
-                        File.AppendAllText(logFile + ".txt", message + "\n");
+
                     }
                     else
                     {

@@ -22,7 +22,6 @@ namespace Server
         private readonly ConcurrentDictionary<int, Game> currentGames = new ConcurrentDictionary<int, Game>();
         private readonly ConcurrentQueue<TcpClient> connectionQueue = new ConcurrentQueue<TcpClient>();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
-        private readonly Logger logger;
         private volatile bool isShuttingDown = false;
         private string gameDir;
         private int clientsConnected = 1;
@@ -56,7 +55,7 @@ namespace Server
             Directory.CreateDirectory("gameDir");
             this.gameDir = "gameDir";
             listener = new TcpListener(IPAddress.Parse(ip), port);
-            logger = new Logger();
+            Logger.InitalizeLogger();
         }
 
 
@@ -72,8 +71,8 @@ namespace Server
             Thread connectionHandler = new Thread(AcceptConnections);
             connectionHandler.Start();
 
-            logger.Log("SERVER STARTED");
-            logger.Log($"Waiting for clients");
+            Logger.Log("SERVER STARTED");
+            Logger.Log($"Waiting for clients");
 
             while (!isShuttingDown)
             {
@@ -88,7 +87,7 @@ namespace Server
                 }
                 catch (Exception e)
                 {
-                    logger.Log($"Exception caught -- ServerControl.StopServer() -- {e}");
+                    Logger.Log($"Exception caught -- ServerControl.StopServer() -- {e}");
                 }
             }
         }
@@ -129,19 +128,19 @@ namespace Server
             {
                 if (Console.ReadKey(true).Key == ConsoleKey.C) // Check for 'c' key press
                 {
-                    logger.Log($"Server Shutdown Initiated");
+                    Logger.Log($"Server Shutdown Initiated");
                     cts.Cancel();
                 }
             }
             while (totalUsers > 0)
             {
-                logger.Log($"Total Users {totalUsers}");
+                Logger.Log($"Total Users {totalUsers}");
                 Thread.Sleep(100);
             }
 
             isShuttingDown = true;
             listener.Stop();
-            logger.Stop();
+            Logger.Stop();
             currentGames.Clear();
         }
 
@@ -163,7 +162,7 @@ namespace Server
             Game game = null;
             try
             {
-                logger.Log($"Total Users {totalUsers}");
+                Logger.Log($"Total Users {totalUsers}");
 
                 string responseContent = string.Empty;
                 string[] msg = await ReadMessage(user);
@@ -180,7 +179,7 @@ namespace Server
                     currentGames.TryGetValue(int.Parse(msg[1]), out game);
                     if (!cts.IsCancellationRequested)
                     {
-                        logger.Log($"Client {{ {game.clientId} }} reconnected. Total {{ {totalUsers} }}");
+                        Logger.Log($"Client {{ {game.clientId} }} reconnected. Total {{ {totalUsers} }}");
                         HandleSubsuqentRequests(reqType, msg, game, out responseContent, out respType);
                     }
                 }
@@ -201,11 +200,11 @@ namespace Server
             }
             catch (IOException)
             {
-                logger.Log($"Client Disconnected Total {{ {totalUsers} }}");
+                Logger.Log($"Client Disconnected Total {{ {totalUsers} }}");
             }
             catch (Exception e)
             {
-                logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e.Message}");
+                Logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e.Message}");
             }
             finally
             {
@@ -219,7 +218,7 @@ namespace Server
         */
         private void CloseConnection(TcpClient user)
         {
-            logger.Log($"Client connection closed");
+            Logger.Log($"Client connection closed");
             user.Close();
         }
         /*
@@ -271,7 +270,7 @@ namespace Server
         private void HandleFirstConnect(out Game game, out string responseContent, out int respType, string[] msg)
         {
             game = new Game(gameDir, GenerateId(msg[1]));
-            logger.Log($"New game made name: {msg[1]}");
+            Logger.Log($"New game made name: {msg[1]}");
             game.InitalizeGame();
             if (game.prevWordPool == game.currentWordPool)
             {
@@ -310,7 +309,7 @@ namespace Server
         public void SendMessage(TcpClient client, int respType, int clientId, string content)
         {
             string toSend = $"{respType} {clientId} {content}";
-            logger.Log($"Sending Message :{toSend}");
+            Logger.Log($"Sending Message :{toSend}");
             var buffer = Encoding.ASCII.GetBytes(toSend);
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
@@ -326,7 +325,7 @@ namespace Server
             NetworkStream stream = client.GetStream();
             int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
             string logString = Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
-            logger.Log($"Message Recieved {logString}");
+            Logger.Log($"Message Recieved {logString}");
             return logString.Split(' ');
         }
 
