@@ -158,8 +158,6 @@ namespace Server
             Game game = null;
             try
             {
-                Logger.Log($"Total Users {totalUsers}");
-
                 string responseContent = string.Empty;
                 string[] msg = await ReadMessage(user);
                 int respType = 0;
@@ -175,7 +173,6 @@ namespace Server
                     currentGames.TryGetValue(int.Parse(msg[1]), out game);
                     if (!cts.IsCancellationRequested)
                     {
-                        Logger.Log($"Client {{ {game.clientId} }} reconnected. Total {{ {totalUsers} }}");
                         HandleSubsuqentRequests(reqType, msg, game, out responseContent, out respType);
                     }
                 }
@@ -194,10 +191,6 @@ namespace Server
                     totalUsers--;
                 }
             }
-            catch (IOException)
-            {
-                Logger.Log($"Client Disconnected Total {{ {totalUsers} }}");
-            }
             catch (Exception e)
             {
                 Logger.Log($"Exception caught -- ServerControl.HandleClient() -- {e.Message}");
@@ -214,7 +207,6 @@ namespace Server
         */
         private void CloseConnection(TcpClient user)
         {
-            Logger.Log($"Client connection closed");
             user.Close();
         }
         /*
@@ -266,7 +258,6 @@ namespace Server
         private void HandleFirstConnect(out Game game, out string responseContent, out int respType, string[] msg)
         {
             game = new Game(gameDir, GenerateId(msg[1]));
-            Logger.Log($"New game made name: {msg[1]}");
             game.InitalizeGame();
             if (game.prevWordPool == game.currentWordPool)
             {

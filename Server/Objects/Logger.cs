@@ -24,6 +24,7 @@ namespace Server
         public static void InitalizeLogger()
         {
             logFile = ConfigurationSettings.AppSettings["LogFilePath"];
+            File.CreateText(logFile).Dispose();
             Task.Run(() => ProcessMessageQueue());
         }
 
