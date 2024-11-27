@@ -46,7 +46,7 @@ namespace Server
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Exception caught in 'Play()' {e.Message}");
+                Logger.Log($"Exception caught in 'Play()' {e.Message}");
             }
             return remainingWords.ToString();
         }

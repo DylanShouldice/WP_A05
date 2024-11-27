@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -134,7 +135,6 @@ namespace Server
             }
             while (totalUsers > 0)
             {
-                Logger.Log($"Total Users {totalUsers}");
                 Thread.Sleep(100);
             }
 
@@ -329,6 +329,26 @@ namespace Server
             return logString.Split(' ');
         }
 
+
+        static string ChooseIp()
+        {
+            List<IPAddress> validIps = new List<IPAddress>();
+            foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    validIps.Add(ip);
+                }
+            }
+
+            if (validIps.Count == 0)
+            {
+                Console.WriteLine("No valid IP addresses found.");
+                return string.Empty;
+            }
+
+            return validIps[validIps.Count - 1].ToString();
+        }
 
     }
 }

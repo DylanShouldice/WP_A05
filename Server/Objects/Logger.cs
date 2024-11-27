@@ -34,7 +34,7 @@ namespace Server
         */
         public static void Log(string message)
         {
-            logQueue.Enqueue($"{DateTime.Now} - {message}");
+            logQueue.Enqueue($"{DateTime.Now} - {message}\n");
         }
 
         public static void Stop()
@@ -55,7 +55,6 @@ namespace Server
                 {
                     if (logQueue.TryDequeue(out string message))
                     {
-                        Console.WriteLine(message);
                         File.AppendAllText(logFile, message);
                     }
                     else
