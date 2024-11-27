@@ -14,16 +14,16 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    internal class Logger
+    public static class Logger
     {
-        private string logFile = string.Empty;
-        private readonly ConcurrentQueue<string> logQueue = new ConcurrentQueue<string>();
-        private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        private static string logFile = string.Empty;
+        private static readonly ConcurrentQueue<string> logQueue = new ConcurrentQueue<string>();
+        private static readonly CancellationTokenSource cts = new CancellationTokenSource();
 
 
-        public Logger()
+        public static void InitalizeLogger()
         {
-            this.logFile = ConfigurationSettings.AppSettings["LogFilePath"];
+            logFile = ConfigurationSettings.AppSettings["LogFilePath"];
 
             Task.Run(() => ProcessMessageQueue());
         }
@@ -33,12 +33,12 @@ namespace Server
         *  Process : adds a new message to queue
         *  Output  : NONE
         */
-        public void Log(string message)
+        public static void Log(string message)
         {
             logQueue.Enqueue($"{DateTime.Now} - {message}");
         }
 
-        public void Stop()
+        public static void Stop()
         {
             cts.Cancel();
         }
@@ -48,7 +48,7 @@ namespace Server
         *  Process : Adds messages in queue to the log file and the console
         *  Output  : NONE
         */
-        public void ProcessMessageQueue()
+        public static void ProcessMessageQueue()
         {
             while (!cts.IsCancellationRequested)
             {
