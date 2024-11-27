@@ -17,12 +17,12 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    internal class ServerControl
+    public class ServerControl
     {
         private readonly TcpListener listener;
         private readonly ConcurrentDictionary<int, Game> currentGames = new ConcurrentDictionary<int, Game>();
         private readonly ConcurrentQueue<TcpClient> connectionQueue = new ConcurrentQueue<TcpClient>();
-        private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        public readonly CancellationTokenSource cts = new CancellationTokenSource();
         private volatile bool isShuttingDown = false;
         private string gameDir;
         private int clientsConnected = 1;
@@ -56,7 +56,6 @@ namespace Server
             Directory.CreateDirectory("gameDir");
             this.gameDir = "gameDir";
             listener = new TcpListener(IPAddress.Parse(ip), port);
-            Logger.InitalizeLogger();
         }
 
 
@@ -127,11 +126,7 @@ namespace Server
         {
             while (!cts.IsCancellationRequested)
             {
-                if (Console.ReadKey(true).Key == ConsoleKey.C) // Check for 'c' key press
-                {
-                    Logger.Log($"Server Shutdown Initiated");
-                    cts.Cancel();
-                }
+                Thread.Sleep(100);
             }
             while (totalUsers > 0)
             {
@@ -330,7 +325,7 @@ namespace Server
         }
 
 
-        static string ChooseIp()
+        public static string ChooseIp()
         {
             List<IPAddress> validIps = new List<IPAddress>();
             foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
