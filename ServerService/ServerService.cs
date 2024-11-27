@@ -1,10 +1,26 @@
-﻿using Server;
+﻿/*
+ * FILE             : ServerService.cs
+ * PROJECT          : A06 - Services
+ * PROGRAMMER       : Oliver Gingerich and Dylan Shouldice-Jacobs
+ * FIRST VERSION    : 2024/11/26
+ * DESCRIPTION      : This file contains the OnStart and OnStop functions for our service which start and stop our server respectively.
+ */
+using Server;
 using System;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 
 namespace ServerService
 {
+
+    /*
+     * =================================================CLASS===============================================|
+     * Title    : ServerService                                                                             |
+     * Purpose  : The purpose of this class is to manage a service which manages our server. The OnStart    |
+     *            function initializes required parts of our server and starts it. OnStop throws the        |
+     *            cancellation token which triggers the server shutdown.                                    |
+     *======================================================================================================|
+     */
     public partial class ServerService : ServiceBase
     {
         ServerControl server;
@@ -13,6 +29,14 @@ namespace ServerService
             InitializeComponent();
         }
 
+        /*=====================FUNCTION=================================|
+         * Name     : OnStart                                           |
+         * Purpose  : To start our server when the service is started.  |
+         * Inputs   : String[] args                                     |
+         * Outputs  : Logs status messages to a text file.              |
+         * Returns  : NONE                                              |
+         * =============================================================|
+         */
         protected override void OnStart(string[] args)
         {
             Task.Run(() =>
@@ -36,6 +60,14 @@ namespace ServerService
             });
         }
 
+        /*=====================FUNCTION=================================|
+         * Name     : OnStop                                            |
+         * Purpose  : To stop our server when the service is stopped.   |
+         * Inputs   : String[] args                                     |
+         * Outputs  : NONE                                              |
+         * Returns  : NONE                                              |
+         * =============================================================|
+         */
         protected override void OnStop()
         {
             Task.Run(() => server.cts.Cancel());
