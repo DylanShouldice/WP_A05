@@ -15,23 +15,30 @@ namespace ServerService
 
         protected override void OnStart(string[] args)
         {
-            try
+            Task.Run(() =>
             {
-                Logger.InitalizeLogger();
-                server = new ServerControl(ServerControl.ChooseIp(), 13000);
-                Task.Run(() => server.StartServer());
-            }
-            catch (Exception e)
-            {
-                Logger.Log($"Exception Caught -- {e}");
-            }
+                try
+                {
+                    Logger.InitalizeLogger();
+                    Logger.Log("Starting Server.");
 
-
+                    string ipAddress = ServerControl.ChooseIp();
+                    int port = 13000;
+                    Logger.Log($"Initializing ServerControl with IP: {ipAddress}, Port: {port}");
+                    server = new ServerControl(ipAddress, port);
+                    server.StartServer().Wait();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"Exception occurred while starting the service: {ex.Message}");
+                    throw;
+                }
+            });
         }
 
         protected override void OnStop()
         {
-            server.cts.Cancel();
+            Task.Run(() => server.cts.Cancel());
         }
     }
 }

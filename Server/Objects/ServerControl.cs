@@ -53,8 +53,10 @@ namespace Server
 
         public ServerControl(string ip, int port)
         {
-            Directory.CreateDirectory("gameDir");
-            this.gameDir = "gameDir";
+            Logger.Log("Attempting to create gameDir");
+            this.gameDir = "C:\\Temp\\gameDir";
+            Directory.CreateDirectory(gameDir);
+            Logger.Log("Created gameDir");
             listener = new TcpListener(IPAddress.Parse(ip), port);
         }
 
