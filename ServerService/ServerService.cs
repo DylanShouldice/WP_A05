@@ -65,12 +65,13 @@ namespace ServerService
          * Name     : OnStop                                            |
          * Purpose  : To stop our server when the service is stopped.   |
          * Inputs   : String[] args                                     |
-         * Outputs  : NONE                                              |
+         * Outputs  : Logs to log file.                                 |
          * Returns  : NONE                                              |
          * =============================================================|
          */
         protected override void OnStop()
         {
+            Logger.Log("Server shutting down.");
             Task.Run(() => server.cts.Cancel());
         }
     }
